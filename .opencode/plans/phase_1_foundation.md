@@ -195,6 +195,56 @@ lounge/
 
 ---
 
+## Manual Testing Checklist
+
+**After building the app in GNOME Builder, perform these tests:**
+
+### 1. Launch Test
+- [ ] App launches without errors
+- [ ] Window appears with default size (1200x800)
+- [ ] Sidebar is visible with 4 navigation items (Search, Log, Watchlist, Collections)
+- [ ] Sidebar has "Lounge" title and hamburger menu in its header
+- [ ] Main content area has toggle sidebar button
+
+### 2. Navigation Test
+- [ ] Click "Search" - Shows search placeholder with search icon
+- [ ] Click "Log" - Shows log placeholder with list icon
+- [ ] Click "Watchlist" - Shows watchlist placeholder with pin icon
+- [ ] Click "Collections" - Shows collections placeholder with grid icon
+- [ ] Content area smoothly transitions between views
+
+### 3. Sidebar Toggle Test
+- [ ] Click sidebar toggle button - Sidebar hides
+- [ ] Click toggle button again - Sidebar shows
+- [ ] Toggle button state syncs with sidebar visibility
+
+### 4. Window State Persistence Test
+- [ ] Resize window to a custom size
+- [ ] Close the app
+- [ ] Relaunch the app
+- [ ] Window opens at the same size as before
+- [ ] Maximize the window
+- [ ] Close and relaunch
+- [ ] Window opens maximized
+
+### 5. Menu Test
+- [ ] Click the hamburger menu button in sidebar header
+- [ ] Menu shows: Preferences, Keyboard Shortcuts, About Lounge
+- [ ] Click "About Lounge"
+- [ ] About dialog appears with app info and developer name
+
+### 6. Visual Inspection
+- [ ] All icons display correctly
+- [ ] Sidebar and content headers align properly at the top
+- [ ] No color mismatches in title bar area
+- [ ] Text is readable and properly translated
+- [ ] UI follows libadwaita design patterns
+- [ ] No visual glitches or layout issues
+
+**Report any failures or issues for fixes before moving to Phase 2.**
+
+---
+
 ## Notes
 
 - Database setup deferred to Phase 2

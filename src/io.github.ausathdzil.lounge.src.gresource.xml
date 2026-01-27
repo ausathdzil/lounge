@@ -3,5 +3,9 @@
   <gresource prefix="/io/github/ausathdzil/lounge/js">
     <file>main.js</file>
     <file>window.js</file>
+    <file>views/search-view.js</file>
+    <file>views/log-view.js</file>
+    <file>views/watchlist-view.js</file>
+    <file>views/collections-view.js</file>
   </gresource>
 </gresources>

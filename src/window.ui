@@ -7,25 +7,95 @@
     <property name="default-width">800</property>
     <property name="default-height">600</property>
     <property name="content">
-      <object class="AdwToolbarView">
-        <child type="top">
-          <object class="AdwHeaderBar">
-            <child type="end">
-              <object class="GtkMenuButton">
-                <property name="primary">True</property>
-                <property name="icon-name">open-menu-symbolic</property>
-                <property name="tooltip-text" translatable="yes">Main Menu</property>
-                <property name="menu-model">primary_menu</property>
+      <object class="AdwOverlaySplitView" id="split_view">
+        <property name="sidebar-position">start</property>
+        <property name="show-sidebar">true</property>
+        <property name="min-sidebar-width">200</property>
+        <property name="max-sidebar-width">280</property>
+        <property name="sidebar">
+          <object class="AdwToolbarView">
+            <child type="top">
+              <object class="AdwHeaderBar">
+                <property name="show-title">false</property>
+                <child type="start">
+                  <object class="GtkMenuButton">
+                    <property name="icon-name">open-menu-symbolic</property>
+                    <property name="tooltip-text" translatable="yes">Main Menu</property>
+                    <property name="menu-model">primary_menu</property>
+                  </object>
+                </child>
+                <child type="title">
+                  <object class="GtkLabel">
+                    <property name="label" translatable="yes">Lounge</property>
+                    <style>
+                      <class name="title"/>
+                    </style>
+                  </object>
+                </child>
               </object>
             </child>
+            <property name="content">
+              <object class="GtkScrolledWindow">
+                <property name="vexpand">true</property>
+                <property name="hscrollbar-policy">never</property>
+                <child>
+                  <object class="GtkListBox" id="sidebar_list">
+                    <property name="selection-mode">single</property>
+                    <style>
+                      <class name="navigation-sidebar"/>
+                    </style>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="title" translatable="yes">Search</property>
+                        <property name="icon-name">system-search-symbolic</property>
+                        <property name="activatable">true</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="title" translatable="yes">Log</property>
+                        <property name="icon-name">view-list-symbolic</property>
+                        <property name="activatable">true</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="title" translatable="yes">Watchlist</property>
+                        <property name="icon-name">view-pin-symbolic</property>
+                        <property name="activatable">true</property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="AdwActionRow">
+                        <property name="title" translatable="yes">Collections</property>
+                        <property name="icon-name">view-grid-symbolic</property>
+                        <property name="activatable">true</property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </property>
           </object>
-        </child>
+        </property>
         <property name="content">
-          <object class="GtkLabel" id="label">
-            <property name="label" translatable="yes">Hello, World!</property>
-            <style>
-              <class name="title-1"/>
-            </style>
+          <object class="AdwToolbarView">
+            <child type="top">
+              <object class="AdwHeaderBar">
+                <child type="start">
+                  <object class="GtkToggleButton" id="sidebar_toggle">
+                    <property name="icon-name">sidebar-show-symbolic</property>
+                    <property name="tooltip-text" translatable="yes">Toggle Sidebar</property>
+                    <property name="active">true</property>
+                  </object>
+                </child>
+              </object>
+            </child>
+            <property name="content">
+              <object class="GtkStack" id="content_stack">
+                <property name="transition-type">crossfade</property>
+              </object>
+            </property>
           </object>
         </property>
       </object>

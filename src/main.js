@@ -21,6 +21,7 @@
 import GObject from 'gi://GObject';
 import Gio from 'gi://Gio';
 import Gtk from 'gi://Gtk?version=4.0';
+import Gdk from 'gi://Gdk?version=4.0';
 import Adw from 'gi://Adw?version=1';
 
 import { LoungeWindow } from './window.js';
@@ -67,8 +68,41 @@ export const LoungeApplication = GObject.registerClass(
         vfunc_activate() {
             let {active_window} = this;
 
-            if (!active_window)
+            if (!active_window) {
+                // Load custom CSS on first activation
+                const provider = new Gtk.CssProvider();
+                const css = `
+                    .poster-placeholder {
+                        background-color: alpha(currentColor, 0.1);
+                        border-top-left-radius: 12px;
+                        border-top-right-radius: 12px;
+                        border-bottom-left-radius: 0;
+                        border-bottom-right-radius: 0;
+                    }
+                    
+                    /* Make flowboxchild focusable and interactive */
+                    flowboxchild {
+                        border-radius: 12px;
+                    }
+                    
+                    flowboxchild:hover .card {
+                        background-color: alpha(currentColor, 0.05);
+                    }
+                    
+                    flowboxchild:focus .card {
+                        outline: 2px solid @accent_color;
+                        outline-offset: 2px;
+                    }
+                `;
+                provider.load_from_string(css);
+                Gtk.StyleContext.add_provider_for_display(
+                    Gdk.Display.get_default(),
+                    provider,
+                    Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+                );
+
                 active_window = new LoungeWindow(this);
+            }
 
             active_window.present();
         }

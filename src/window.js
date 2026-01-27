@@ -27,11 +27,12 @@ import { SearchView } from './views/search-view.js';
 import { LogView } from './views/log-view.js';
 import { WatchlistView } from './views/watchlist-view.js';
 import { CollectionsView } from './views/collections-view.js';
+import { MovieDetailsDialog } from './widgets/movie-details-dialog.js';
 
 export const LoungeWindow = GObject.registerClass({
     GTypeName: 'LoungeWindow',
     Template: 'resource:///io/github/ausathdzil/lounge/window.ui',
-    InternalChildren: ['sidebar_list', 'content_stack', 'split_view', 'sidebar_toggle'],
+    InternalChildren: ['sidebar_list', 'content_stack', 'split_view', 'sidebar_toggle', 'view_title'],
 }, class LoungeWindow extends Adw.ApplicationWindow {
     constructor(application) {
         super({ application });
@@ -49,6 +50,11 @@ export const LoungeWindow = GObject.registerClass({
         this._watchlistView = new WatchlistView();
         this._collectionsView = new CollectionsView();
 
+        // Connect search view movie selection
+        this._searchView.movieSelectedCallback = (movie) => {
+            this._showMovieDetails(movie);
+        };
+
         // Add views to stack
         this._content_stack.add_named(this._searchView, 'search');
         this._content_stack.add_named(this._logView, 'log');
@@ -62,8 +68,10 @@ export const LoungeWindow = GObject.registerClass({
         this._sidebar_list.connect('row-activated', (listbox, row) => {
             const index = row.get_index();
             const views = ['search', 'log', 'watchlist', 'collections'];
+            const titles = ['Search', 'Log', 'Watchlist', 'Collections'];
             if (index >= 0 && index < views.length) {
                 this._content_stack.set_visible_child_name(views[index]);
+                this._view_title.set_label(titles[index]);
             }
         });
 
@@ -103,5 +111,10 @@ export const LoungeWindow = GObject.registerClass({
         this._settings.set_int('window-width', width);
         this._settings.set_int('window-height', height);
         this._settings.set_boolean('window-maximized', this.is_maximized());
+    }
+
+    _showMovieDetails(movie) {
+        const dialog = new MovieDetailsDialog(movie, this);
+        dialog.present(this);
     }
 });

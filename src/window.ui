@@ -16,7 +16,7 @@
           <object class="AdwToolbarView">
             <child type="top">
               <object class="AdwHeaderBar">
-                <property name="show-title">false</property>
+                <property name="show-title">true</property>
                 <child type="start">
                   <object class="GtkMenuButton">
                     <property name="icon-name">open-menu-symbolic</property>
@@ -87,6 +87,14 @@
                     <property name="icon-name">sidebar-show-symbolic</property>
                     <property name="tooltip-text" translatable="yes">Toggle Sidebar</property>
                     <property name="active">true</property>
+                  </object>
+                </child>
+                <child type="title">
+                  <object class="GtkLabel" id="view_title">
+                    <property name="label" translatable="yes">Search</property>
+                    <style>
+                      <class name="title"/>
+                    </style>
                   </object>
                 </child>
               </object>

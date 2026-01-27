@@ -1,0 +1,8 @@
+# List of source files containing translatable strings.
+# Please keep this file sorted alphabetically.
+data/io.github.ausathdzil.lounge.desktop.in
+data/io.github.ausathdzil.lounge.metainfo.xml.in
+data/io.github.ausathdzil.lounge.gschema.xml
+src/main.js
+src/window.js
+src/window.ui

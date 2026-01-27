@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist gettext-domain="lounge">
+	<schema id="io.github.ausathdzil.lounge" path="/io/github/ausathdzil/lounge/">
+	</schema>
+</schemalist>

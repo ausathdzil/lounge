@@ -74,15 +74,11 @@ export const PreferencesDialog = GObject.registerClass({
 
         tmdbGroup.add(this._apiKeyRow);
 
-        // Button and status message in a horizontal box
-        const buttonBox = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 12,
-            margin_top: 12,
-        });
-
+        // Test connection button
         this._testButton = new Gtk.Button({
             label: _('Test Connection'),
+            halign: Gtk.Align.START,
+            margin_top: 12,
             css_classes: ['suggested-action'],
         });
 
@@ -90,27 +86,28 @@ export const PreferencesDialog = GObject.registerClass({
             this._testConnection();
         });
 
-        buttonBox.append(this._testButton);
-
         // Status message label
         this._statusLabel = new Gtk.Label({
             label: '',
-            wrap: true,
+            wrap: false,
             xalign: 0,
             valign: Gtk.Align.CENTER,
+            margin_start: 12,
             css_classes: ['caption'],
             visible: false,
         });
 
+        // Horizontal box for button and message
+        const buttonBox = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            spacing: 12,
+            margin_top: 12,
+        });
+
+        buttonBox.append(this._testButton);
         buttonBox.append(this._statusLabel);
 
-        // Create an action row to hold the button box
-        const buttonRow = new Adw.ActionRow({
-            activatable: false,
-        });
-        buttonRow.set_child(buttonBox);
-
-        tmdbGroup.add(buttonRow);
+        tmdbGroup.add(buttonBox);
 
         page.add(tmdbGroup);
         this.add(page);

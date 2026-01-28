@@ -11,5 +11,6 @@
     <file>widgets/movie-details-dialog.js</file>
     <file>utils/mock-data.js</file>
     <file>services/database.js</file>
+    <file>services/tmdb.js</file>
   </gresource>
 </gresources>

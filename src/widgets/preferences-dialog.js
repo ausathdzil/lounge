@@ -33,6 +33,7 @@ export const PreferencesDialog = GObject.registerClass({
             title: _('Preferences'),
         });
 
+        this._parent = parent;
         this._settings = new Gio.Settings({
             schema_id: 'io.github.ausathdzil.lounge',
         });
@@ -56,6 +57,7 @@ export const PreferencesDialog = GObject.registerClass({
         // API Key entry row
         this._apiKeyRow = new Adw.PasswordEntryRow({
             title: _('API Key'),
+            show_apply_button: false,
         });
 
         // Load saved API key
@@ -72,34 +74,11 @@ export const PreferencesDialog = GObject.registerClass({
 
         tmdbGroup.add(this._apiKeyRow);
 
-        // Help text
-        const helpLabel = new Gtk.Label({
-            label: _('Get your free API key at https://www.themoviedb.org/settings/api'),
-            wrap: true,
-            xalign: 0,
-            margin_top: 12,
-            css_classes: ['dim-label', 'caption'],
-        });
-
-        const helpBox = new Gtk.Box({
-            orientation: Gtk.Orientation.VERTICAL,
-            margin_start: 12,
-            margin_end: 12,
-        });
-        helpBox.append(helpLabel);
-
-        const helpRow = new Adw.PreferencesRow({
-            activatable: false,
-            child: helpBox,
-        });
-
-        tmdbGroup.add(helpRow);
-
         // Test connection button
         this._testButton = new Gtk.Button({
             label: _('Test Connection'),
             halign: Gtk.Align.START,
-            margin_top: 6,
+            margin_top: 12,
             css_classes: ['suggested-action'],
         });
 
@@ -107,20 +86,19 @@ export const PreferencesDialog = GObject.registerClass({
             this._testConnection();
         });
 
-        const buttonBox = new Gtk.Box({
-            orientation: Gtk.Orientation.VERTICAL,
-            margin_start: 12,
-            margin_end: 12,
-            margin_bottom: 12,
-        });
-        buttonBox.append(this._testButton);
+        tmdbGroup.add(this._testButton);
 
-        const buttonRow = new Adw.PreferencesRow({
-            activatable: false,
-            child: buttonBox,
+        // Status message label
+        this._statusLabel = new Gtk.Label({
+            label: '',
+            wrap: true,
+            xalign: 0,
+            margin_top: 6,
+            css_classes: ['caption'],
+            visible: false,
         });
 
-        tmdbGroup.add(buttonRow);
+        tmdbGroup.add(this._statusLabel);
 
         page.add(tmdbGroup);
         this.add(page);
@@ -130,11 +108,12 @@ export const PreferencesDialog = GObject.registerClass({
         const apiKey = this._apiKeyRow.get_text();
 
         if (!apiKey) {
-            this._showToast(_('Please enter an API key'));
+            this._showMessage(_('Please enter an API key'), 'error');
             return;
         }
 
-        // Disable button and show loading
+        // Hide previous message and disable button
+        this._statusLabel.set_visible(false);
         this._testButton.set_sensitive(false);
         this._testButton.set_label(_('Testing...'));
 
@@ -142,13 +121,13 @@ export const PreferencesDialog = GObject.registerClass({
             const tmdb = new TMDBService(apiKey);
             await tmdb.testConnection();
             
-            this._showToast(_('Connection successful!'));
+            this._showMessage(_('✓ Connection successful!'), 'success');
             this._testButton.set_label(_('Test Connection'));
         } catch (error) {
             if (error.message.includes('Invalid API key')) {
-                this._showToast(_('Invalid API key'));
+                this._showMessage(_('✗ Invalid API key'), 'error');
             } else {
-                this._showToast(_('Connection failed: ') + error.message);
+                this._showMessage(_('✗ Connection failed: ') + error.message, 'error');
             }
             this._testButton.set_label(_('Test Connection'));
         } finally {
@@ -156,16 +135,22 @@ export const PreferencesDialog = GObject.registerClass({
         }
     }
 
-    _showToast(message) {
-        const toast = new Adw.Toast({
-            title: message,
-            timeout: 3,
-        });
+    _showMessage(message, type) {
+        this._statusLabel.set_label(message);
+        this._statusLabel.set_visible(true);
 
-        // Get the parent window to show toast
-        const parent = this.get_root();
-        if (parent && parent.add_toast) {
-            parent.add_toast(toast);
+        // Remove previous style classes
+        this._statusLabel.remove_css_class('success');
+        this._statusLabel.remove_css_class('error');
+        this._statusLabel.remove_css_class('warning');
+
+        // Add appropriate style class
+        if (type === 'success') {
+            this._statusLabel.add_css_class('success');
+        } else if (type === 'error') {
+            this._statusLabel.add_css_class('error');
+        } else if (type === 'warning') {
+            this._statusLabel.add_css_class('warning');
         }
     }
 });

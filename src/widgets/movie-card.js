@@ -54,7 +54,6 @@ export const MovieCard = GObject.registerClass({
             orientation: Gtk.Orientation.VERTICAL,
             spacing: 0,
             css_classes: ['card'],
-            width_request: 150,
         });
 
         this._imageCache = imageCache;
@@ -77,8 +76,7 @@ export const MovieCard = GObject.registerClass({
             halign: Gtk.Align.FILL,
             hexpand: true,
             vexpand: false,
-            width_request: 150,
-            height_request: 225,
+            height_request: 300,
             css_classes: ['poster-placeholder'],
         });
 
@@ -150,8 +148,6 @@ export const MovieCard = GObject.registerClass({
 
     async _loadPosterImage() {
         try {
-            console.log(`Loading poster for: ${this._movie.title} (ID: ${this._movie.id}, path: ${this._movie.poster_path})`);
-            
             const pixbuf = await this._imageCache.getPosterPixbuf(
                 this._movie.id,
                 this._movie.poster_path,
@@ -160,8 +156,6 @@ export const MovieCard = GObject.registerClass({
             );
 
             if (pixbuf) {
-                console.log(`Successfully loaded poster for: ${this._movie.title}`);
-                
                 // Clear placeholder
                 let child = this._posterBox.get_first_child();
                 while (child) {
@@ -170,17 +164,14 @@ export const MovieCard = GObject.registerClass({
                     child = next;
                 }
 
-                // Scale pixbuf to fit container (150x225) while maintaining aspect ratio
-                const targetWidth = 150;
-                const targetHeight = 225;
+                // Scale pixbuf to fit container while maintaining aspect ratio
+                const targetHeight = 300;
                 
                 const originalWidth = pixbuf.get_width();
                 const originalHeight = pixbuf.get_height();
                 
-                // Calculate scale to cover the container
-                const scaleWidth = targetWidth / originalWidth;
-                const scaleHeight = targetHeight / originalHeight;
-                const scale = Math.max(scaleWidth, scaleHeight);
+                // Calculate scale based on height to cover the container
+                const scale = targetHeight / originalHeight;
                 
                 const scaledWidth = Math.round(originalWidth * scale);
                 const scaledHeight = Math.round(originalHeight * scale);
@@ -195,7 +186,7 @@ export const MovieCard = GObject.registerClass({
                 // Create texture from scaled pixbuf
                 const texture = Gdk.Texture.new_for_pixbuf(scaledPixbuf);
 
-                // Create picture widget with fixed size
+                // Create picture widget
                 const picture = new Gtk.Picture({
                     paintable: texture,
                     content_fit: Gtk.ContentFit.COVER,
@@ -203,16 +194,12 @@ export const MovieCard = GObject.registerClass({
                     valign: Gtk.Align.FILL,
                     hexpand: true,
                     vexpand: true,
-                    width_request: 150,
-                    height_request: 225,
+                    height_request: 300,
                 });
 
                 this._posterBox.append(picture);
-            } else {
-                console.log(`No pixbuf returned for: ${this._movie.title}`);
             }
         } catch (error) {
-            console.error(`Failed to load poster for ${this._movie.title}:`, error);
             logError(error, `Failed to load poster for movie ${this._movie.id}`);
             // Keep placeholder on error
         }

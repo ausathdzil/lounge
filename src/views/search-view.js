@@ -21,8 +21,8 @@
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 import Adw from 'gi://Adw';
+import GLib from 'gi://GLib';
 
-import { MOCK_MOVIES } from '../utils/mock-data.js';
 import { MovieCard } from '../widgets/movie-card.js';
 
 export const SearchView = GObject.registerClass({
@@ -40,29 +40,35 @@ export const SearchView = GObject.registerClass({
 
         this._imageCache = imageCache;
         this._tmdbService = tmdbService;
-        
-        console.log('SearchView initialized with:', {
-            hasImageCache: !!imageCache,
-            hasTmdbService: !!tmdbService
-        });
+        this._searchTimeout = null;
 
         this._buildUI();
-        this._showResults();
     }
 
     _buildUI() {
         // Search entry
-        const searchEntry = new Gtk.SearchEntry({
-            placeholder_text: _('Search movies (Phase 3)'),
+        this._searchEntry = new Gtk.SearchEntry({
+            placeholder_text: _('Search movies on TMDB'),
             margin_start: 12,
             margin_end: 12,
             margin_top: 12,
             margin_bottom: 6,
-            // Note: Search functionality will be implemented in Phase 3
-            // For now, it's enabled for testing focus behavior
         });
 
-        this.append(searchEntry);
+        // Connect search with debounce
+        this._searchEntry.connect('search-changed', () => {
+            if (this._searchTimeout) {
+                GLib.source_remove(this._searchTimeout);
+            }
+
+            this._searchTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+                this._onSearchChanged();
+                this._searchTimeout = null;
+                return GLib.SOURCE_REMOVE;
+            });
+        });
+
+        this.append(this._searchEntry);
 
         // Stack for different states
         this._stack = new Gtk.Stack({
@@ -71,7 +77,7 @@ export const SearchView = GObject.registerClass({
         });
 
         // Empty state
-        const emptyState = new Adw.StatusPage({
+        this._emptyState = new Adw.StatusPage({
             icon_name: 'system-search-symbolic',
             title: _('Search for Movies'),
             description: _('Find movies from TMDB'),
@@ -79,7 +85,53 @@ export const SearchView = GObject.registerClass({
             hexpand: true,
         });
 
-        this._stack.add_named(emptyState, 'empty');
+        this._stack.add_named(this._emptyState, 'empty');
+
+        // Loading state
+        const loadingBox = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            halign: Gtk.Align.CENTER,
+            valign: Gtk.Align.CENTER,
+            spacing: 12,
+        });
+
+        const spinner = new Gtk.Spinner({
+            spinning: true,
+            width_request: 32,
+            height_request: 32,
+        });
+
+        const loadingLabel = new Gtk.Label({
+            label: _('Searching...'),
+            css_classes: ['title-3'],
+        });
+
+        loadingBox.append(spinner);
+        loadingBox.append(loadingLabel);
+
+        this._stack.add_named(loadingBox, 'loading');
+
+        // No results state
+        this._noResultsState = new Adw.StatusPage({
+            icon_name: 'edit-find-symbolic',
+            title: _('No Results Found'),
+            description: _('Try a different search term'),
+            vexpand: true,
+            hexpand: true,
+        });
+
+        this._stack.add_named(this._noResultsState, 'no-results');
+
+        // Error state
+        this._errorState = new Adw.StatusPage({
+            icon_name: 'dialog-error-symbolic',
+            title: _('Search Failed'),
+            description: _('Check your API key and internet connection'),
+            vexpand: true,
+            hexpand: true,
+        });
+
+        this._stack.add_named(this._errorState, 'error');
 
         // Results view
         const scrolled = new Gtk.ScrolledWindow({
@@ -90,15 +142,15 @@ export const SearchView = GObject.registerClass({
         this._flowBox = new Gtk.FlowBox({
             selection_mode: Gtk.SelectionMode.NONE,
             homogeneous: true,
-            column_spacing: 18,
-            row_spacing: 18,
-            margin_start: 18,
-            margin_end: 18,
+            column_spacing: 12,
+            row_spacing: 12,
+            margin_start: 12,
+            margin_end: 12,
             margin_top: 12,
             margin_bottom: 18,
             max_children_per_line: 5,
             min_children_per_line: 2,
-            activate_on_single_click: true, // Enable click and keyboard activation
+            activate_on_single_click: true,
         });
 
         // Handle keyboard activation (Enter/Space on focused item)
@@ -116,7 +168,39 @@ export const SearchView = GObject.registerClass({
         this.append(this._stack);
     }
 
-    _showResults() {
+    async _onSearchChanged() {
+        const query = this._searchEntry.get_text().trim();
+
+        if (!query) {
+            this._stack.set_visible_child_name('empty');
+            return;
+        }
+
+        if (!this._tmdbService) {
+            this._errorState.set_description(_('TMDB service not available'));
+            this._stack.set_visible_child_name('error');
+            return;
+        }
+
+        // Show loading state
+        this._stack.set_visible_child_name('loading');
+
+        try {
+            const response = await this._tmdbService.searchMovies(query);
+
+            if (response && response.results && response.results.length > 0) {
+                this._displayResults(response.results);
+            } else {
+                this._stack.set_visible_child_name('no-results');
+            }
+        } catch (error) {
+            logError(error, 'Failed to search movies');
+            this._errorState.set_description(error.message || _('An error occurred while searching'));
+            this._stack.set_visible_child_name('error');
+        }
+    }
+
+    _displayResults(movies) {
         // Clear existing cards
         let child = this._flowBox.get_first_child();
         while (child) {
@@ -126,9 +210,9 @@ export const SearchView = GObject.registerClass({
         }
 
         // Add movie cards
-        MOCK_MOVIES.forEach(movie => {
+        movies.forEach(movie => {
             const card = new MovieCard(movie, this._imageCache, this._tmdbService);
-            card._movieData = movie; // Store movie data
+            card._movieData = movie;
             this._flowBox.append(card);
         });
 

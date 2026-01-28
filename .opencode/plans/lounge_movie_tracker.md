@@ -220,42 +220,55 @@ lounge/
 
 ## Implementation Phases
 
-### Phase 1: Foundation (Week 1)
-- [ ] Project setup with Meson
-- [ ] Basic application skeleton
-- [ ] Main window with navigation
+### Phase 1: Foundation ✅
+- [x] Project setup with Meson
+- [x] Basic application skeleton
+- [x] Main window with navigation
+- [x] Window state persistence (GSettings)
+
+### Phase 2: Search UI & Movie Cards ✅
+- [x] Movie card widget with mock data
+- [x] Search view layout with grid
+- [x] Movie details dialog
+- [x] Empty states
+- [x] Basic interactions (click card → open dialog)
+- [x] Keyboard navigation and accessibility
+- [x] Dynamic view titles
+
+### Phase 3: Database & TMDB Integration (Current)
 - [ ] SQLite database setup and migrations
-- [ ] Settings (GSettings) for TMDB API key
-
-### Phase 2: TMDB Integration (Week 1-2)
 - [ ] TMDB API client (search, details, images)
-- [ ] Movie search view
-- [ ] Movie details dialog
+- [ ] Settings (GSettings) for TMDB API key
+- [ ] Preferences dialog for API key
+- [ ] Wire up search view to TMDB API
 - [ ] Image caching (poster/backdrop)
+- [ ] Replace mock data with real data
 
-### Phase 3: Core Features (Week 2-3)
+### Phase 4: Core Features - Logging
 - [ ] Log movie as watched
 - [ ] Rating widget (5 stars, half-stars)
 - [ ] Review/notes editor
-- [ ] Diary view with filtering/sorting
+- [ ] Log view with filtering/sorting
+- [ ] Movie actions in details dialog
 
-### Phase 4: Watchlist (Week 3)
+### Phase 5: Watchlist
 - [ ] Add to watchlist
 - [ ] Watchlist view
-- [ ] Mark as watched (move to diary)
+- [ ] Mark as watched (move to log)
 - [ ] Priority ordering
 
-### Phase 5: Collections (Week 3-4)
+### Phase 6: Collections
 - [ ] Create/edit/delete collections
 - [ ] Add/remove movies from collections
 - [ ] Collection detail view
+- [ ] Collections grid view
 
-### Phase 6: Polish (Week 4)
-- [ ] Empty states
+### Phase 7: Polish
 - [ ] Error handling and offline support
 - [ ] Loading states and skeletons
 - [ ] Keyboard shortcuts
-- [ ] Flatpak packaging
+- [ ] Performance optimization
+- [ ] Flatpak packaging improvements
 
 ---
 

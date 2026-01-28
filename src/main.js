@@ -100,6 +100,16 @@ export const LoungeApplication = GObject.registerClass(
                         border-top-right-radius: 12px;
                         border-bottom-left-radius: 0;
                         border-bottom-right-radius: 0;
+                        min-width: 150px;
+                        max-width: 150px;
+                        min-height: 225px;
+                        max-height: 225px;
+                    }
+                    
+                    .poster-placeholder picture,
+                    .poster-placeholder image {
+                        border-top-left-radius: 12px;
+                        border-top-right-radius: 12px;
                     }
                     
                     /* Make flowboxchild focusable and interactive */

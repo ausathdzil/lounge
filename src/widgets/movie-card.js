@@ -20,6 +20,7 @@
 
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
+import Gdk from 'gi://Gdk';
 import Adw from 'gi://Adw';
 
 export const MovieCard = GObject.registerClass({
@@ -48,13 +49,17 @@ export const MovieCard = GObject.registerClass({
         ),
     },
 }, class MovieCard extends Gtk.Box {
-    constructor(movie) {
+    constructor(movie, imageCache = null, tmdbService = null) {
         super({
             orientation: Gtk.Orientation.VERTICAL,
             spacing: 0,
             css_classes: ['card'],
             width_request: 150,
         });
+
+        this._imageCache = imageCache;
+        this._tmdbService = tmdbService;
+        this._movie = movie;
 
         if (movie) {
             this.movie_id = movie.id;
@@ -66,27 +71,26 @@ export const MovieCard = GObject.registerClass({
     }
 
     _buildUI() {
-        // Poster placeholder - full width
-        const posterBox = new Gtk.Box({
+        // Poster container
+        this._posterBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
             halign: Gtk.Align.FILL,
             hexpand: true,
             vexpand: false,
+            width_request: 150,
             height_request: 225,
             css_classes: ['poster-placeholder'],
         });
 
-        const icon = new Gtk.Image({
-            icon_name: 'video-x-generic-symbolic',
-            pixel_size: 64,
-            opacity: 0.5,
-            halign: Gtk.Align.CENTER,
-            valign: Gtk.Align.CENTER,
-            vexpand: true,
-        });
+        // Show placeholder initially
+        this._showPlaceholder();
 
-        posterBox.append(icon);
-        this.append(posterBox);
+        this.append(this._posterBox);
+
+        // Load real image if services are available
+        if (this._imageCache && this._tmdbService && this._movie && this._movie.poster_path) {
+            this._loadPosterImage();
+        }
 
         // Text content with padding
         const textBox = new Gtk.Box({
@@ -121,5 +125,96 @@ export const MovieCard = GObject.registerClass({
 
         textBox.append(yearLabel);
         this.append(textBox);
+    }
+
+    _showPlaceholder() {
+        // Clear existing content
+        let child = this._posterBox.get_first_child();
+        while (child) {
+            const next = child.get_next_sibling();
+            this._posterBox.remove(child);
+            child = next;
+        }
+
+        const icon = new Gtk.Image({
+            icon_name: 'video-x-generic-symbolic',
+            pixel_size: 64,
+            opacity: 0.5,
+            halign: Gtk.Align.CENTER,
+            valign: Gtk.Align.CENTER,
+            vexpand: true,
+        });
+
+        this._posterBox.append(icon);
+    }
+
+    async _loadPosterImage() {
+        try {
+            console.log(`Loading poster for: ${this._movie.title} (ID: ${this._movie.id}, path: ${this._movie.poster_path})`);
+            
+            const pixbuf = await this._imageCache.getPosterPixbuf(
+                this._movie.id,
+                this._movie.poster_path,
+                this._tmdbService,
+                'w342'
+            );
+
+            if (pixbuf) {
+                console.log(`Successfully loaded poster for: ${this._movie.title}`);
+                
+                // Clear placeholder
+                let child = this._posterBox.get_first_child();
+                while (child) {
+                    const next = child.get_next_sibling();
+                    this._posterBox.remove(child);
+                    child = next;
+                }
+
+                // Scale pixbuf to fit container (150x225) while maintaining aspect ratio
+                const targetWidth = 150;
+                const targetHeight = 225;
+                
+                const originalWidth = pixbuf.get_width();
+                const originalHeight = pixbuf.get_height();
+                
+                // Calculate scale to cover the container
+                const scaleWidth = targetWidth / originalWidth;
+                const scaleHeight = targetHeight / originalHeight;
+                const scale = Math.max(scaleWidth, scaleHeight);
+                
+                const scaledWidth = Math.round(originalWidth * scale);
+                const scaledHeight = Math.round(originalHeight * scale);
+                
+                // Scale the pixbuf
+                const scaledPixbuf = pixbuf.scale_simple(
+                    scaledWidth,
+                    scaledHeight,
+                    2 // GdkPixbuf.InterpType.BILINEAR
+                );
+
+                // Create texture from scaled pixbuf
+                const texture = Gdk.Texture.new_for_pixbuf(scaledPixbuf);
+
+                // Create picture widget with fixed size
+                const picture = new Gtk.Picture({
+                    paintable: texture,
+                    content_fit: Gtk.ContentFit.COVER,
+                    halign: Gtk.Align.FILL,
+                    valign: Gtk.Align.FILL,
+                    hexpand: true,
+                    vexpand: true,
+                    width_request: 150,
+                    height_request: 225,
+                });
+
+                this._posterBox.append(picture);
+            } else {
+                console.log(`No pixbuf returned for: ${this._movie.title}`);
+            }
+        } catch (error) {
+            console.error(`Failed to load poster for ${this._movie.title}:`, error);
+            logError(error, `Failed to load poster for movie ${this._movie.id}`);
+            // Keep placeholder on error
+        }
     }
 });

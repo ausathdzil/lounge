@@ -31,11 +31,19 @@ export const SearchView = GObject.registerClass({
         'movie-selected': {},
     },
 }, class SearchView extends Gtk.Box {
-    constructor() {
+    constructor(imageCache = null, tmdbService = null) {
         super({
             orientation: Gtk.Orientation.VERTICAL,
             hexpand: true,
             vexpand: true,
+        });
+
+        this._imageCache = imageCache;
+        this._tmdbService = tmdbService;
+        
+        console.log('SearchView initialized with:', {
+            hasImageCache: !!imageCache,
+            hasTmdbService: !!tmdbService
         });
 
         this._buildUI();
@@ -119,7 +127,7 @@ export const SearchView = GObject.registerClass({
 
         // Add movie cards
         MOCK_MOVIES.forEach(movie => {
-            const card = new MovieCard(movie);
+            const card = new MovieCard(movie, this._imageCache, this._tmdbService);
             card._movieData = movie; // Store movie data
             this._flowBox.append(card);
         });

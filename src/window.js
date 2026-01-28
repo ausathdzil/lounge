@@ -28,6 +28,7 @@ import { LogView } from './views/log-view.js';
 import { WatchlistView } from './views/watchlist-view.js';
 import { CollectionsView } from './views/collections-view.js';
 import { MovieDetailsDialog } from './widgets/movie-details-dialog.js';
+import { TMDBService } from './services/tmdb.js';
 
 export const LoungeWindow = GObject.registerClass({
     GTypeName: 'LoungeWindow',
@@ -41,11 +42,15 @@ export const LoungeWindow = GObject.registerClass({
             schema_id: 'io.github.ausathdzil.lounge',
         });
 
+        // Initialize TMDB service with API key from settings
+        const apiKey = this._settings.get_string('tmdb-api-key');
+        this._tmdbService = new TMDBService(apiKey);
+
         // Restore window state
         this._restoreWindowState();
 
         // Create views
-        this._searchView = new SearchView();
+        this._searchView = new SearchView(application.imageCache, this._tmdbService);
         this._logView = new LogView();
         this._watchlistView = new WatchlistView();
         this._collectionsView = new CollectionsView();

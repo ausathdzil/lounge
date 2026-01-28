@@ -10,5 +10,6 @@
     <file>widgets/movie-card.js</file>
     <file>widgets/movie-details-dialog.js</file>
     <file>utils/mock-data.js</file>
+    <file>services/database.js</file>
   </gresource>
 </gresources>

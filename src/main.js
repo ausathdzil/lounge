@@ -25,6 +25,7 @@ import Gdk from 'gi://Gdk?version=4.0';
 import Adw from 'gi://Adw?version=1';
 
 import { LoungeWindow } from './window.js';
+import { DatabaseService } from './services/database.js';
 
 pkg.initGettext();
 pkg.initFormat();
@@ -37,6 +38,9 @@ export const LoungeApplication = GObject.registerClass(
                 flags: Gio.ApplicationFlags.DEFAULT_FLAGS,
                 resource_base_path: '/io/github/ausathdzil/lounge'
             });
+
+            // Initialize database service
+            this.database = new DatabaseService();
 
             const quit_action = new Gio.SimpleAction({name: 'quit'});
                 quit_action.connect('activate', action => {
@@ -69,6 +73,11 @@ export const LoungeApplication = GObject.registerClass(
             let {active_window} = this;
 
             if (!active_window) {
+                // Initialize database on first activation
+                this.database.initialize().catch(error => {
+                    logError(error, 'Failed to initialize database');
+                });
+
                 // Load custom CSS on first activation
                 const provider = new Gtk.CssProvider();
                 const css = `

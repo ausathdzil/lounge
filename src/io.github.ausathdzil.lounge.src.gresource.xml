@@ -13,5 +13,6 @@
     <file>utils/mock-data.js</file>
     <file>services/database.js</file>
     <file>services/tmdb.js</file>
+    <file>services/image-cache.js</file>
   </gresource>
 </gresources>

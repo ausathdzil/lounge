@@ -26,6 +26,7 @@ import Adw from 'gi://Adw?version=1';
 
 import { LoungeWindow } from './window.js';
 import { DatabaseService } from './services/database.js';
+import { ImageCacheService } from './services/image-cache.js';
 import { PreferencesDialog } from './widgets/preferences-dialog.js';
 
 pkg.initGettext();
@@ -42,6 +43,9 @@ export const LoungeApplication = GObject.registerClass(
 
             // Initialize database service
             this.database = new DatabaseService();
+
+            // Initialize image cache service
+            this.imageCache = new ImageCacheService();
 
             const quit_action = new Gio.SimpleAction({name: 'quit'});
                 quit_action.connect('activate', action => {

@@ -31,6 +31,7 @@ export const PreferencesDialog = GObject.registerClass({
     constructor(parent) {
         super({
             title: _('Preferences'),
+            content_width: 500,
         });
 
         this._parent = parent;
@@ -74,12 +75,19 @@ export const PreferencesDialog = GObject.registerClass({
 
         tmdbGroup.add(this._apiKeyRow);
 
+        // Horizontal box for button and message
+        const buttonBox = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            spacing: 12,
+            margin_top: 12,
+            valign: Gtk.Align.START,
+        });
+
         // Test connection button
         this._testButton = new Gtk.Button({
             label: _('Test Connection'),
-            halign: Gtk.Align.START,
-            margin_top: 12,
             css_classes: ['suggested-action'],
+            valign: Gtk.Align.CENTER,
         });
 
         this._testButton.connect('clicked', () => {
@@ -92,16 +100,8 @@ export const PreferencesDialog = GObject.registerClass({
             wrap: false,
             xalign: 0,
             valign: Gtk.Align.CENTER,
-            margin_start: 12,
-            css_classes: ['caption'],
+            css_classes: ['body'],
             visible: false,
-        });
-
-        // Horizontal box for button and message
-        const buttonBox = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 12,
-            margin_top: 12,
         });
 
         buttonBox.append(this._testButton);

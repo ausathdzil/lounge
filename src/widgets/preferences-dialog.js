@@ -1,0 +1,171 @@
+/* preferences-dialog.js
+ *
+ * Copyright 2026 Ausath Ikram
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+import GObject from 'gi://GObject';
+import Gtk from 'gi://Gtk';
+import Adw from 'gi://Adw';
+import Gio from 'gi://Gio';
+
+import { TMDBService } from '../services/tmdb.js';
+
+export const PreferencesDialog = GObject.registerClass({
+    GTypeName: 'PreferencesDialog',
+}, class PreferencesDialog extends Adw.PreferencesDialog {
+    constructor(parent) {
+        super({
+            title: _('Preferences'),
+        });
+
+        this._settings = new Gio.Settings({
+            schema_id: 'io.github.ausathdzil.lounge',
+        });
+
+        this._buildUI();
+    }
+
+    _buildUI() {
+        // Create preferences page
+        const page = new Adw.PreferencesPage({
+            title: _('General'),
+            icon_name: 'preferences-system-symbolic',
+        });
+
+        // TMDB Integration group
+        const tmdbGroup = new Adw.PreferencesGroup({
+            title: _('TMDB Integration'),
+            description: _('Configure The Movie Database API access'),
+        });
+
+        // API Key entry row
+        this._apiKeyRow = new Adw.PasswordEntryRow({
+            title: _('API Key'),
+        });
+
+        // Load saved API key
+        const savedKey = this._settings.get_string('tmdb-api-key');
+        if (savedKey) {
+            this._apiKeyRow.set_text(savedKey);
+        }
+
+        // Save API key when changed
+        this._apiKeyRow.connect('changed', () => {
+            const newKey = this._apiKeyRow.get_text();
+            this._settings.set_string('tmdb-api-key', newKey);
+        });
+
+        tmdbGroup.add(this._apiKeyRow);
+
+        // Help text
+        const helpLabel = new Gtk.Label({
+            label: _('Get your free API key at https://www.themoviedb.org/settings/api'),
+            wrap: true,
+            xalign: 0,
+            margin_top: 12,
+            css_classes: ['dim-label', 'caption'],
+        });
+
+        const helpBox = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            margin_start: 12,
+            margin_end: 12,
+        });
+        helpBox.append(helpLabel);
+
+        const helpRow = new Adw.PreferencesRow({
+            activatable: false,
+            child: helpBox,
+        });
+
+        tmdbGroup.add(helpRow);
+
+        // Test connection button
+        this._testButton = new Gtk.Button({
+            label: _('Test Connection'),
+            halign: Gtk.Align.START,
+            margin_top: 6,
+            css_classes: ['suggested-action'],
+        });
+
+        this._testButton.connect('clicked', () => {
+            this._testConnection();
+        });
+
+        const buttonBox = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            margin_start: 12,
+            margin_end: 12,
+            margin_bottom: 12,
+        });
+        buttonBox.append(this._testButton);
+
+        const buttonRow = new Adw.PreferencesRow({
+            activatable: false,
+            child: buttonBox,
+        });
+
+        tmdbGroup.add(buttonRow);
+
+        page.add(tmdbGroup);
+        this.add(page);
+    }
+
+    async _testConnection() {
+        const apiKey = this._apiKeyRow.get_text();
+
+        if (!apiKey) {
+            this._showToast(_('Please enter an API key'));
+            return;
+        }
+
+        // Disable button and show loading
+        this._testButton.set_sensitive(false);
+        this._testButton.set_label(_('Testing...'));
+
+        try {
+            const tmdb = new TMDBService(apiKey);
+            await tmdb.testConnection();
+            
+            this._showToast(_('Connection successful!'));
+            this._testButton.set_label(_('Test Connection'));
+        } catch (error) {
+            if (error.message.includes('Invalid API key')) {
+                this._showToast(_('Invalid API key'));
+            } else {
+                this._showToast(_('Connection failed: ') + error.message);
+            }
+            this._testButton.set_label(_('Test Connection'));
+        } finally {
+            this._testButton.set_sensitive(true);
+        }
+    }
+
+    _showToast(message) {
+        const toast = new Adw.Toast({
+            title: message,
+            timeout: 3,
+        });
+
+        // Get the parent window to show toast
+        const parent = this.get_root();
+        if (parent && parent.add_toast) {
+            parent.add_toast(toast);
+        }
+    }
+});

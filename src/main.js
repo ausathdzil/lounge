@@ -26,6 +26,7 @@ import Adw from 'gi://Adw?version=1';
 
 import { LoungeWindow } from './window.js';
 import { DatabaseService } from './services/database.js';
+import { PreferencesDialog } from './widgets/preferences-dialog.js';
 
 pkg.initGettext();
 pkg.initFormat();
@@ -67,6 +68,14 @@ export const LoungeApplication = GObject.registerClass(
                 aboutDialog.present(this.active_window);
             });
             this.add_action(show_about_action);
+
+            const preferences_action = new Gio.SimpleAction({name: 'preferences'});
+            preferences_action.connect('activate', action => {
+                const prefsDialog = new PreferencesDialog(this.active_window);
+                prefsDialog.present(this.active_window);
+            });
+            this.add_action(preferences_action);
+            this.set_accels_for_action('app.preferences', ['<control>comma']);
         }
 
         vfunc_activate() {

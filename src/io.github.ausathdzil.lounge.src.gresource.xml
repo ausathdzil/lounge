@@ -9,6 +9,7 @@
     <file>views/collections-view.js</file>
     <file>widgets/movie-card.js</file>
     <file>widgets/movie-details-dialog.js</file>
+    <file>widgets/preferences-dialog.js</file>
     <file>utils/mock-data.js</file>
     <file>services/database.js</file>
     <file>services/tmdb.js</file>

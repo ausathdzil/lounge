@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="lounge">
 	<schema id="io.github.ausathdzil.lounge" path="/io/github/ausathdzil/lounge/">
+		<key name="tmdb-api-key" type="s">
+			<default>''</default>
+			<summary>TMDB API Key</summary>
+			<description>API key for accessing The Movie Database</description>
+		</key>
 		<key name="window-width" type="i">
 			<default>1200</default>
 			<summary>Window width</summary>

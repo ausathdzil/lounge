@@ -26,7 +26,7 @@ import { LogEntryDialog } from './log-entry-dialog.js';
 export const MovieDetailsDialog = GObject.registerClass({
     GTypeName: 'MovieDetailsDialog',
 }, class MovieDetailsDialog extends Adw.Dialog {
-    constructor(movie, parent) {
+    constructor(movie, database) {
         super({
             title: movie.title,
             content_width: 600,
@@ -35,7 +35,11 @@ export const MovieDetailsDialog = GObject.registerClass({
         });
 
         this._movie = movie;
+        this._database = database;
+        this._logEntry = null;
+        
         this._buildUI();
+        this._loadLogEntry();
     }
 
     _buildUI() {
@@ -170,44 +174,98 @@ export const MovieDetailsDialog = GObject.registerClass({
         });
         box.append(overviewLabel);
 
-        // Placeholder for future actions
-        const testButton = new Gtk.Button({
-            label: 'Test: Open Log Entry Dialog',
+        // Log status section
+        this._logStatusBox = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            spacing: 8,
             margin_top: 12,
+        });
+        
+        this._logStatusLabel = new Gtk.Label({
+            xalign: 0,
+            css_classes: ['dim-label'],
+            visible: false,
+        });
+        this._logStatusBox.append(this._logStatusLabel);
+        
+        this._logButton = new Gtk.Button({
+            label: _('Log Movie'),
             css_classes: ['suggested-action'],
         });
-        testButton.connect('clicked', () => {
-            const logDialog = new LogEntryDialog(this._movie, null);
-            logDialog.connect('saved', (_, data) => {
-                console.log('Log saved:', data);
-                const toast = new Adw.Toast({
-                    title: 'Log entry saved (test mode)',
-                    timeout: 2,
-                });
-                // Try to show toast on parent window
-                let parent = this.get_root();
-                if (parent && parent._toastOverlay) {
-                    parent._toastOverlay.add_toast(toast);
-                }
-            });
-            logDialog.connect('deleted', (_, logId) => {
-                console.log('Log deleted:', logId);
-            });
-            logDialog.present(this);
-        });
-        box.append(testButton);
+        this._logButton.connect('clicked', () => this._openLogDialog());
+        this._logStatusBox.append(this._logButton);
         
-        const actionsLabel = new Gtk.Label({
-            label: _('(Temporary test button - will be replaced in Step 4)'),
-            css_classes: ['dim-label', 'caption'],
-            xalign: 0,
-            margin_top: 4,
-        });
-        box.append(actionsLabel);
+        box.append(this._logStatusBox);
 
         scrolled.set_child(box);
         toolbarView.set_content(scrolled);
         this.set_child(toolbarView);
+    }
+
+    async _loadLogEntry() {
+        try {
+            this._logEntry = await this._database.getLogEntry(this._movie.id);
+            console.log('Loaded log entry:', this._logEntry);
+            this._updateLogStatus();
+        } catch (error) {
+            console.error('Failed to load log entry:', error);
+        }
+    }
+
+    _updateLogStatus() {
+        if (this._logEntry) {
+            // Movie is logged - show info and change button
+            const stars = '★'.repeat(this._logEntry.user_rating);
+            const emptyStars = '☆'.repeat(5 - this._logEntry.user_rating);
+            this._logStatusLabel.label = `Your rating: ${stars}${emptyStars} • Watched: ${this._logEntry.watched_date}`;
+            this._logStatusLabel.visible = true;
+            this._logButton.label = _('Edit Log');
+            this._logButton.css_classes = [''];
+        } else {
+            // Movie not logged - hide info and show "Log Movie" button
+            this._logStatusLabel.visible = false;
+            this._logButton.label = _('Log Movie');
+            this._logButton.css_classes = ['suggested-action'];
+        }
+    }
+
+    _openLogDialog() {
+        const logDialog = new LogEntryDialog(this._movie, this._logEntry);
+        
+        logDialog.connect('saved', async (_, data) => {
+            try {
+                // First, cache the movie if not already cached
+                await this._database.cacheMovie(this._movie);
+                
+                // Then save the log entry
+                await this._database.logMovie(
+                    data.movie_id,
+                    data.rating,
+                    data.date,
+                    data.notes
+                );
+                
+                // Reload log entry
+                await this._loadLogEntry();
+                
+                console.log('Log entry saved successfully');
+            } catch (error) {
+                console.error('Failed to save log entry:', error);
+            }
+        });
+        
+        logDialog.connect('deleted', async (_, logId) => {
+            try {
+                await this._database.deleteLogEntry(logId);
+                this._logEntry = null;
+                this._updateLogStatus();
+                console.log('Log entry deleted successfully');
+            } catch (error) {
+                console.error('Failed to delete log entry:', error);
+            }
+        });
+        
+        logDialog.present(this);
     }
 
     _formatRuntime(minutes) {

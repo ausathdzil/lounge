@@ -38,6 +38,8 @@ export const LoungeWindow = GObject.registerClass({
     constructor(application) {
         super({ application });
 
+        this._application = application;
+
         this._settings = new Gio.Settings({
             schema_id: 'io.github.ausathdzil.lounge',
         });
@@ -119,7 +121,7 @@ export const LoungeWindow = GObject.registerClass({
     }
 
     _showMovieDetails(movie) {
-        const dialog = new MovieDetailsDialog(movie, this);
+        const dialog = new MovieDetailsDialog(movie, this._application.database);
         dialog.present(this);
     }
 });

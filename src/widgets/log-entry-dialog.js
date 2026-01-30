@@ -310,7 +310,7 @@ export const LogEntryDialog = GObject.registerClass({
 
         dialog.connect('response', (_, response) => {
             if (response === 'delete') {
-                this.emit('deleted', this._existingLog.id);
+                this.emit('deleted', this._existingLog.log_id);
                 this.close();
             }
         });

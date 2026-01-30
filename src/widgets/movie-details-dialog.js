@@ -25,6 +25,9 @@ import { LogEntryDialog } from './log-entry-dialog.js';
 
 export const MovieDetailsDialog = GObject.registerClass({
     GTypeName: 'MovieDetailsDialog',
+    Signals: {
+        'log-changed': {},
+    },
 }, class MovieDetailsDialog extends Adw.Dialog {
     constructor(movie, database) {
         super({
@@ -34,7 +37,21 @@ export const MovieDetailsDialog = GObject.registerClass({
             can_close: true,
         });
 
-        this._movie = movie;
+        // Normalize the movie object (handle both search results and log entries)
+        this._movie = {
+            id: movie.id || movie.movie_id,
+            title: movie.title,
+            year: movie.year,
+            poster_path: movie.poster_path,
+            backdrop_path: movie.backdrop_path,
+            overview: movie.overview,
+            runtime: movie.runtime,
+            genres: movie.genres,
+            director: movie.director,
+            tmdb_rating: movie.tmdb_rating,
+            original_title: movie.original_title,
+        };
+        
         this._database = database;
         this._logEntry = null;
         
@@ -139,21 +156,33 @@ export const MovieDetailsDialog = GObject.registerClass({
         infoBox.append(ratingBox);
 
         // Runtime and genres
-        const metaLabel = new Gtk.Label({
-            label: `${this._formatRuntime(this._movie.runtime)} • ${this._movie.genres}`,
-            wrap: true,
-            xalign: 0,
-            css_classes: ['dim-label'],
-        });
-        infoBox.append(metaLabel);
+        const metaParts = [];
+        if (this._movie.runtime) {
+            metaParts.push(this._formatRuntime(this._movie.runtime));
+        }
+        if (this._movie.genres) {
+            metaParts.push(this._movie.genres);
+        }
+        
+        if (metaParts.length > 0) {
+            const metaLabel = new Gtk.Label({
+                label: metaParts.join(' • '),
+                wrap: true,
+                xalign: 0,
+                css_classes: ['dim-label'],
+            });
+            infoBox.append(metaLabel);
+        }
 
         // Director
-        const directorLabel = new Gtk.Label({
-            label: `Director: ${this._movie.director}`,
-            wrap: true,
-            xalign: 0,
-        });
-        infoBox.append(directorLabel);
+        if (this._movie.director) {
+            const directorLabel = new Gtk.Label({
+                label: `Director: ${this._movie.director}`,
+                wrap: true,
+                xalign: 0,
+            });
+            infoBox.append(directorLabel);
+        }
 
         headerBox.append(infoBox);
         box.append(headerBox);
@@ -167,7 +196,7 @@ export const MovieDetailsDialog = GObject.registerClass({
         box.append(overviewHeading);
 
         const overviewLabel = new Gtk.Label({
-            label: this._movie.overview,
+            label: this._movie.overview || 'No overview available',
             wrap: true,
             xalign: 0,
             selectable: true,
@@ -205,7 +234,6 @@ export const MovieDetailsDialog = GObject.registerClass({
     async _loadLogEntry() {
         try {
             this._logEntry = await this._database.getLogEntry(this._movie.id);
-            console.log('Loaded log entry:', this._logEntry);
             this._updateLogStatus();
         } catch (error) {
             console.error('Failed to load log entry:', error);
@@ -248,6 +276,9 @@ export const MovieDetailsDialog = GObject.registerClass({
                 // Reload log entry
                 await this._loadLogEntry();
                 
+                // Emit signal to refresh log view
+                this.emit('log-changed');
+                
                 console.log('Log entry saved successfully');
             } catch (error) {
                 console.error('Failed to save log entry:', error);
@@ -259,6 +290,10 @@ export const MovieDetailsDialog = GObject.registerClass({
                 await this._database.deleteLogEntry(logId);
                 this._logEntry = null;
                 this._updateLogStatus();
+                
+                // Emit signal to refresh log view
+                this.emit('log-changed');
+                
                 console.log('Log entry deleted successfully');
             } catch (error) {
                 console.error('Failed to delete log entry:', error);

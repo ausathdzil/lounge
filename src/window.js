@@ -53,13 +53,18 @@ export const LoungeWindow = GObject.registerClass({
 
         // Create views
         this._searchView = new SearchView(application.imageCache, this._tmdbService);
-        this._logView = new LogView();
+        this._logView = new LogView(application.database, application.imageCache, this._tmdbService);
         this._watchlistView = new WatchlistView();
         this._collectionsView = new CollectionsView();
 
         // Connect search view movie selection
         this._searchView.movieSelectedCallback = (movie) => {
             this._showMovieDetails(movie);
+        };
+
+        // Connect log view entry selection
+        this._logView.logEntrySelectedCallback = (logEntry) => {
+            this._showMovieDetails(logEntry);
         };
 
         // Add views to stack
@@ -79,6 +84,11 @@ export const LoungeWindow = GObject.registerClass({
             if (index >= 0 && index < views.length) {
                 this._content_stack.set_visible_child_name(views[index]);
                 this._view_title.set_label(titles[index]);
+                
+                // Refresh log view when navigating to it
+                if (views[index] === 'log') {
+                    this._logView.refresh();
+                }
             }
         });
 
@@ -122,6 +132,12 @@ export const LoungeWindow = GObject.registerClass({
 
     _showMovieDetails(movie) {
         const dialog = new MovieDetailsDialog(movie, this._application.database);
+        
+        // Refresh log view when log changes
+        dialog.connect('log-changed', () => {
+            this._logView.refresh();
+        });
+        
         dialog.present(this);
     }
 });

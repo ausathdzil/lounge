@@ -53,10 +53,31 @@ export class DatabaseService {
         if (!dbExists) {
             log(`Initializing new database at: ${this._dbPath}`);
             await this._createSchema();
+        } else {
+            // Check schema version and migrate if needed
+            const version = await this._getSchemaVersion();
+            if (version !== '2') {
+                await this._migrateSchema(version);
+            }
         }
 
         this._initialized = true;
         log('Database service initialized');
+    }
+
+    async _getSchemaVersion() {
+        try {
+            // Use raw query execution since we're still initializing
+            const sql = "SELECT value FROM app_metadata WHERE key = 'schema_version'";
+            const stdout = await this._execute(sql);
+            if (stdout && stdout.trim()) {
+                const result = JSON.parse(stdout);
+                return result.length > 0 ? result[0].value : '1';
+            }
+            return '1';
+        } catch (e) {
+            return '1'; // Default to v1 if query fails
+        }
     }
 
     async _createSchema() {
@@ -81,11 +102,54 @@ export class DatabaseService {
                 value TEXT
             );
 
-            INSERT INTO app_metadata (key, value) VALUES ('schema_version', '1');
+            INSERT INTO app_metadata (key, value) VALUES ('schema_version', '2');
+
+            CREATE TABLE IF NOT EXISTS movie_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                movie_id INTEGER NOT NULL,
+                user_rating REAL CHECK(user_rating >= 1 AND user_rating <= 5),
+                watched_date DATE NOT NULL,
+                notes TEXT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+                UNIQUE(movie_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_movie_logs_movie_id ON movie_logs(movie_id);
+            CREATE INDEX IF NOT EXISTS idx_movie_logs_date ON movie_logs(watched_date);
         `;
 
         await this._execute(schema);
-        log('Database schema created');
+        log('Database schema v2 created');
+    }
+
+    async _migrateSchema(currentVersion) {
+        if (currentVersion === '1') {
+            log('Migrating database from v1 to v2...');
+            
+            const migration = `
+                CREATE TABLE IF NOT EXISTS movie_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    movie_id INTEGER NOT NULL,
+                    user_rating REAL CHECK(user_rating >= 1 AND user_rating <= 5),
+                    watched_date DATE NOT NULL,
+                    notes TEXT,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (movie_id) REFERENCES movies(id) ON DELETE CASCADE,
+                    UNIQUE(movie_id)
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_movie_logs_movie_id ON movie_logs(movie_id);
+                CREATE INDEX IF NOT EXISTS idx_movie_logs_date ON movie_logs(watched_date);
+
+                UPDATE app_metadata SET value = '2' WHERE key = 'schema_version';
+            `;
+
+            await this._execute(migration);
+            log('Database migration to v2 complete');
+        }
     }
 
     async _execute(sql, params = []) {
@@ -207,5 +271,155 @@ export class DatabaseService {
 
     getDbPath() {
         return this._dbPath;
+    }
+
+    // Movie Logging Methods
+
+    async logMovie(movieId, rating, watchedDate, notes = '') {
+        if (!this._initialized) {
+            await this.initialize();
+        }
+
+        // First, ensure movie exists in movies table
+        const movieExists = await this.getMovie(movieId);
+        if (!movieExists) {
+            throw new Error(`Movie ${movieId} must be cached before logging`);
+        }
+
+        const sql = `
+            INSERT INTO movie_logs (movie_id, user_rating, watched_date, notes)
+            VALUES (${movieId}, ${rating}, '${watchedDate}', '${this._escape(notes)}')
+            ON CONFLICT(movie_id) DO UPDATE SET
+                user_rating = ${rating},
+                watched_date = '${watchedDate}',
+                notes = '${this._escape(notes)}',
+                updated_at = CURRENT_TIMESTAMP;
+        `;
+
+        await this._execute(sql);
+        log(`Logged movie: ID ${movieId}, Rating: ${rating}, Date: ${watchedDate}`);
+    }
+
+    async getMovieLogs(filters = {}) {
+        if (!this._initialized) {
+            await this.initialize();
+        }
+
+        let sql = `
+            SELECT 
+                ml.id as log_id,
+                ml.movie_id,
+                ml.user_rating,
+                ml.watched_date,
+                ml.notes,
+                ml.created_at,
+                m.title,
+                m.year,
+                m.poster_path,
+                m.runtime,
+                m.genres,
+                m.director,
+                m.tmdb_rating
+            FROM movie_logs ml
+            JOIN movies m ON ml.movie_id = m.id
+        `;
+
+        const conditions = [];
+        
+        if (filters.year) {
+            conditions.push(`strftime('%Y', ml.watched_date) = '${filters.year}'`);
+        }
+
+        if (conditions.length > 0) {
+            sql += ' WHERE ' + conditions.join(' AND ');
+        }
+
+        // Sorting
+        const sortField = filters.sortBy || 'watched_date';
+        const sortOrder = filters.sortOrder || 'DESC';
+        
+        switch (sortField) {
+            case 'watched_date':
+                sql += ` ORDER BY ml.watched_date ${sortOrder}`;
+                break;
+            case 'rating':
+                sql += ` ORDER BY ml.user_rating ${sortOrder}`;
+                break;
+            case 'title':
+                sql += ` ORDER BY m.title ${sortOrder}`;
+                break;
+            default:
+                sql += ` ORDER BY ml.watched_date DESC`;
+        }
+
+        return await this.query(sql);
+    }
+
+    async getLogEntry(movieId) {
+        if (!this._initialized) {
+            await this.initialize();
+        }
+
+        const sql = `
+            SELECT 
+                ml.id as log_id,
+                ml.movie_id,
+                ml.user_rating,
+                ml.watched_date,
+                ml.notes,
+                ml.created_at,
+                m.title,
+                m.year,
+                m.poster_path,
+                m.runtime,
+                m.genres,
+                m.director,
+                m.tmdb_rating
+            FROM movie_logs ml
+            JOIN movies m ON ml.movie_id = m.id
+            WHERE ml.movie_id = ${movieId}
+            LIMIT 1;
+        `;
+
+        const results = await this.query(sql);
+        return results.length > 0 ? results[0] : null;
+    }
+
+    async updateLogEntry(logId, rating, watchedDate, notes) {
+        if (!this._initialized) {
+            await this.initialize();
+        }
+
+        const sql = `
+            UPDATE movie_logs 
+            SET user_rating = ${rating},
+                watched_date = '${watchedDate}',
+                notes = '${this._escape(notes)}',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = ${logId};
+        `;
+
+        await this._execute(sql);
+        log(`Updated log entry: ${logId}`);
+    }
+
+    async deleteLogEntry(logId) {
+        if (!this._initialized) {
+            await this.initialize();
+        }
+
+        const sql = `DELETE FROM movie_logs WHERE id = ${logId};`;
+        await this._execute(sql);
+        log(`Deleted log entry: ${logId}`);
+    }
+
+    async isMovieLogged(movieId) {
+        if (!this._initialized) {
+            await this.initialize();
+        }
+
+        const sql = `SELECT COUNT(*) as count FROM movie_logs WHERE movie_id = ${movieId};`;
+        const results = await this.query(sql);
+        return results.length > 0 && results[0].count > 0;
     }
 }

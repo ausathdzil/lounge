@@ -10,6 +10,8 @@
     <file>widgets/movie-card.js</file>
     <file>widgets/movie-details-dialog.js</file>
     <file>widgets/preferences-dialog.js</file>
+    <file>widgets/rating-widget.js</file>
+    <file>widgets/log-entry-dialog.js</file>
     <file>utils/mock-data.js</file>
     <file>services/database.js</file>
     <file>services/tmdb.js</file>

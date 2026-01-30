@@ -21,6 +21,7 @@
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 import Adw from 'gi://Adw';
+import { LogEntryDialog } from './log-entry-dialog.js';
 
 export const MovieDetailsDialog = GObject.registerClass({
     GTypeName: 'MovieDetailsDialog',
@@ -170,11 +171,37 @@ export const MovieDetailsDialog = GObject.registerClass({
         box.append(overviewLabel);
 
         // Placeholder for future actions
+        const testButton = new Gtk.Button({
+            label: 'Test: Open Log Entry Dialog',
+            margin_top: 12,
+            css_classes: ['suggested-action'],
+        });
+        testButton.connect('clicked', () => {
+            const logDialog = new LogEntryDialog(this._movie, null);
+            logDialog.connect('saved', (_, data) => {
+                console.log('Log saved:', data);
+                const toast = new Adw.Toast({
+                    title: 'Log entry saved (test mode)',
+                    timeout: 2,
+                });
+                // Try to show toast on parent window
+                let parent = this.get_root();
+                if (parent && parent._toastOverlay) {
+                    parent._toastOverlay.add_toast(toast);
+                }
+            });
+            logDialog.connect('deleted', (_, logId) => {
+                console.log('Log deleted:', logId);
+            });
+            logDialog.present(this);
+        });
+        box.append(testButton);
+        
         const actionsLabel = new Gtk.Label({
-            label: _('Actions will be available in Phase 4'),
+            label: _('(Temporary test button - will be replaced in Step 4)'),
             css_classes: ['dim-label', 'caption'],
             xalign: 0,
-            margin_top: 12,
+            margin_top: 4,
         });
         box.append(actionsLabel);
 

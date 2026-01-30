@@ -220,11 +220,13 @@ Implement the core movie logging feature that allows users to track watched movi
 
 ## Status
 
-- [ ] Step 1: Database Schema
-- [ ] Step 2: Rating Widget
-- [ ] Step 3: Log Entry Dialog
-- [ ] Step 4: Update Details Dialog
-- [ ] Step 5: Log Entry Card
-- [ ] Step 6: Log View
-- [ ] Step 7: Window Integration
-- [ ] Step 8: Testing & Polish
+- [x] Step 1: Database Schema
+- [x] Step 2: Rating Widget
+- [x] Step 3: Log Entry Dialog
+- [x] Step 4: Update Details Dialog
+- [x] Step 5: Log Entry Card
+- [x] Step 6: Log View
+- [x] Step 7: Window Integration
+- [x] Step 8: Testing & Polish
+
+**Phase 4 Complete! ✅**

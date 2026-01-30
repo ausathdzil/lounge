@@ -220,13 +220,13 @@ lounge/
 
 ## Implementation Phases
 
-### Phase 1: Foundation ✅
+### ✅ Phase 1: Foundation (Complete)
 - [x] Project setup with Meson
 - [x] Basic application skeleton
 - [x] Main window with navigation
 - [x] Window state persistence (GSettings)
 
-### Phase 2: Search UI & Movie Cards ✅
+### ✅ Phase 2: Search UI & Movie Cards (Complete)
 - [x] Movie card widget with mock data
 - [x] Search view layout with grid
 - [x] Movie details dialog
@@ -235,40 +235,54 @@ lounge/
 - [x] Keyboard navigation and accessibility
 - [x] Dynamic view titles
 
-### Phase 3: Database & TMDB Integration (Current)
-- [ ] SQLite database setup and migrations
-- [ ] TMDB API client (search, details, images)
-- [ ] Settings (GSettings) for TMDB API key
-- [ ] Preferences dialog for API key
-- [ ] Wire up search view to TMDB API
-- [ ] Image caching (poster/backdrop)
-- [ ] Replace mock data with real data
+### ✅ Phase 3: Database & TMDB Integration (Complete)
+- [x] SQLite database setup and migrations
+- [x] TMDB API client (search, details, images)
+- [x] Settings (GSettings) for TMDB API key
+- [x] Preferences dialog for API key
+- [x] Wire up search view to TMDB API
+- [x] Image caching (poster/backdrop)
+- [x] Replace mock data with real data
 
-### Phase 4: Core Features - Logging
-- [ ] Log movie as watched
-- [ ] Rating widget (5 stars, half-stars)
-- [ ] Review/notes editor
-- [ ] Log view with filtering/sorting
-- [ ] Movie actions in details dialog
+### ✅ Phase 4: Core Features - Logging (Complete)
+- [x] Log movie as watched
+- [x] Rating widget (5 stars)
+- [x] Review/notes editor
+- [x] Log view with filtering/sorting
+- [x] Movie actions in details dialog
 
-### Phase 5: Watchlist
+### 🔄 MVP Polishing Phase (Current - v1.0.0)
+**Goal**: Stabilize and prepare for release
+- [ ] UI improvements (empty states, loading indicators)
+- [ ] Unit tests for database methods
+- [ ] Unit tests for TMDB service
+- [ ] Error handling audit
+- [ ] Accessibility improvements
+- [ ] App metadata and branding
+- [ ] README and documentation
+- [ ] CHANGELOG
+- [ ] Flatpak manifest validation
+- [ ] Flathub submission preparation
+
+### ⏸️ Post-MVP Features (Future Releases)
+
+#### Phase 5: Watchlist (v1.1)
 - [ ] Add to watchlist
 - [ ] Watchlist view
 - [ ] Mark as watched (move to log)
 - [ ] Priority ordering
 
-### Phase 6: Collections
+#### Phase 6: Collections (v1.2)
 - [ ] Create/edit/delete collections
 - [ ] Add/remove movies from collections
 - [ ] Collection detail view
 - [ ] Collections grid view
 
-### Phase 7: Polish
-- [ ] Error handling and offline support
-- [ ] Loading states and skeletons
-- [ ] Keyboard shortcuts
-- [ ] Performance optimization
-- [ ] Flatpak packaging improvements
+#### Phase 7: Statistics & Advanced (v1.3+)
+- [ ] Statistics view (movies per year, genres, etc.)
+- [ ] Import/export (CSV, Letterboxd)
+- [ ] Rewatches tracking
+- [ ] Search within library
 
 ---
 

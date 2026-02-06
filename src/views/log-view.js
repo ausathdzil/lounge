@@ -24,6 +24,7 @@ import Adw from 'gi://Adw';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import { LogEntryCard } from '../widgets/log-entry-card.js';
+import { removeAllChildren } from '../utils/ui.js';
 
 export const LogView = GObject.registerClass({
     GTypeName: 'LogView',
@@ -208,13 +209,7 @@ export const LogView = GObject.registerClass({
     }
 
     _displayLogs() {
-        // Clear existing cards
-        let child = this._flowBox.get_first_child();
-        while (child) {
-            const next = child.get_next_sibling();
-            this._flowBox.remove(child);
-            child = next;
-        }
+        removeAllChildren(this._flowBox);
 
         if (this._logEntries.length === 0) {
             this._stack.set_visible_child_name('empty');

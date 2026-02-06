@@ -23,6 +23,7 @@ import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
 import Adw from 'gi://Adw';
 import { LogEntryDialog } from './log-entry-dialog.js';
+import { removeAllChildren } from '../utils/ui.js';
 
 export const MovieDetailsDialog = GObject.registerClass({
     GTypeName: 'MovieDetailsDialog',
@@ -349,13 +350,7 @@ export const MovieDetailsDialog = GObject.registerClass({
             );
 
             if (pixbuf) {
-                // Clear placeholder
-                let child = this._posterBox.get_first_child();
-                while (child) {
-                    const next = child.get_next_sibling();
-                    this._posterBox.remove(child);
-                    child = next;
-                }
+                removeAllChildren(this._posterBox);
 
                 const targetHeight = 300;
                 const originalWidth = pixbuf.get_width();

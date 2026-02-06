@@ -24,6 +24,7 @@ import Adw from 'gi://Adw';
 import GLib from 'gi://GLib';
 
 import { MovieCard } from '../widgets/movie-card.js';
+import { removeAllChildren } from '../utils/ui.js';
 
 export const SearchView = GObject.registerClass({
     GTypeName: 'SearchView',
@@ -251,13 +252,7 @@ export const SearchView = GObject.registerClass({
     }
 
     _displayResults(movies) {
-        // Clear existing cards
-        let child = this._flowBox.get_first_child();
-        while (child) {
-            const next = child.get_next_sibling();
-            this._flowBox.remove(child);
-            child = next;
-        }
+        removeAllChildren(this._flowBox);
 
         // Add movie cards
         movies.forEach(movie => {

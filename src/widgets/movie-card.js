@@ -23,6 +23,8 @@ import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
 import Adw from 'gi://Adw';
 
+import { removeAllChildren } from '../utils/ui.js';
+
 export const MovieCard = GObject.registerClass({
     GTypeName: 'MovieCard',
     Properties: {
@@ -128,13 +130,7 @@ export const MovieCard = GObject.registerClass({
     }
 
     _showPlaceholder() {
-        // Clear existing content
-        let child = this._posterBox.get_first_child();
-        while (child) {
-            const next = child.get_next_sibling();
-            this._posterBox.remove(child);
-            child = next;
-        }
+        removeAllChildren(this._posterBox);
 
         const icon = new Gtk.Image({
             icon_name: 'video-x-generic-symbolic',
@@ -159,13 +155,7 @@ export const MovieCard = GObject.registerClass({
             );
 
             if (pixbuf) {
-                // Clear placeholder
-                let child = this._posterBox.get_first_child();
-                while (child) {
-                    const next = child.get_next_sibling();
-                    this._posterBox.remove(child);
-                    child = next;
-                }
+                removeAllChildren(this._posterBox);
 
                 // Scale pixbuf to fit container while maintaining aspect ratio
                 const targetHeight = 300;

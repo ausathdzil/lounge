@@ -19,3 +19,18 @@ gnome.post_install(
     gtk_update_icon_cache: true,
   update_desktop_database: true,
 )
+
+# Unit tests
+gjs = find_program('gjs')
+
+test('database',
+  gjs,
+  args: ['-m', meson.project_source_root() / 'tests' / 'database.test.js'],
+  workdir: meson.project_source_root(),
+)
+
+test('tmdb',
+  gjs,
+  args: ['-m', meson.project_source_root() / 'tests' / 'tmdb.test.js'],
+  workdir: meson.project_source_root(),
+)

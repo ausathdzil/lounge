@@ -2,51 +2,52 @@
 
 **Goal:** Test TMDB API integration and end-to-end workflows
 
-**Status:** 🔄 Not Started
+**Status:** ✅ TMDB unit tests complete (20 tests passing), integration tests deferred
 
 ---
 
 ## Test File: `tests/tmdb.test.js`
 
-### API Client
+### URL Generation (Pure Methods)
+- [x] `getPosterUrl()` - Default size (w342)
+- [x] `getPosterUrl()` - Custom size
+- [x] `getPosterUrl()` - Null path returns null
+- [x] `getPosterUrl()` - Empty string returns null
+- [x] `getBackdropUrl()` - Default size (w780)
+- [x] `getBackdropUrl()` - Custom size
+- [x] `getBackdropUrl()` - Null path returns null
+- [x] `getOriginalPosterUrl()` - Original size
+- [x] `getOriginalPosterUrl()` - Null path returns null
+- [x] `getOriginalBackdropUrl()` - Original size
+- [x] `getOriginalBackdropUrl()` - Null path returns null
+
+### API Key Management
+- [x] `setApiKey()` - Updates key
+- [x] `setApiKey()` - Allows empty string
+- [x] Constructor - Sets API key
+- [x] Constructor - Sets base URLs
+- [x] Constructor - Creates Soup session
+
+### Validation (No Network)
+- [x] `searchMovies()` - Throws without API key
+- [x] `searchMovies()` - Throws with null API key
+- [x] `getMovieDetails()` - Throws without API key
+- [x] `testConnection()` - Throws without API key
+
+### Not Tested (Require Network)
 - [ ] `searchMovies()` - Returns results
 - [ ] `searchMovies()` - Handles empty results
 - [ ] `getMovieDetails()` - Returns movie data
 - [ ] `getMovieDetails()` - Handles 404
-- [ ] `getPosterUrl()` - Generates correct URLs
-- [ ] API key validation
-
-### Error Handling
 - [ ] Network timeout handling
 - [ ] Rate limiting (429 response)
 - [ ] Invalid API key (401 response)
-- [ ] Malformed JSON responses
-- [ ] No internet connection
 
 ---
 
-## Test File: `tests/integration.test.js`
+## Integration Tests
 
-### End-to-End Workflows
-
-**Search and Log Flow:**
-1. Search for "The Matrix"
-2. Select movie from results
-3. Log with rating 5, today's date
-4. Verify appears in Log view
-5. Edit rating to 4
-6. Verify updated
-7. Delete log
-8. Verify removed
-
-**Data Persistence:**
-1. Log several movies
-2. Close app
-3. Reopen app
-4. Verify all logs still present
-5. Verify sorting works
-
----
+Deferred -- would require mocking the full search-to-log UI workflow. Manual testing checklist below covers these scenarios.
 
 ## Manual Testing Checklist
 
@@ -64,14 +65,12 @@
 - [ ] Delete all logs (empty state)
 - [ ] Very long movie titles display correctly
 - [ ] Special characters in notes work
-- [ ] Future date validation
 - [ ] Missing poster handling
 
 ---
 
-## Test Infrastructure Needed
+## Testing Approach
 
-- Mock TMDB API server (or use nock/vitest-fetch-mock)
-- Test database (in-memory or temp file)
-- GitHub Actions CI for automated testing
-- Code coverage reporting (optional)
+GJS-native tests using `gjs -m`. Pure/synchronous methods tested directly. Network-dependent methods tested only for input validation (API key checks).
+
+Run: `gjs -m tests/tmdb.test.js`

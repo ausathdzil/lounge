@@ -52,8 +52,11 @@ Minimum Viable Product (MVP) focusing on core functionality: **Search movies and
 - [ ] Dark mode support (if not already working)
 
 #### Code Quality
-- [ ] Unit tests for database methods
-- [ ] Unit tests for TMDB service
+- [x] Unit tests for database methods (29 tests)
+- [x] Unit tests for TMDB service (20 tests)
+- [x] Test runner infrastructure (tests/runner.js)
+- [x] Meson test targets
+- [x] Bug fix: _getSchemaVersion() JSON parsing
 - [ ] Error handling audit
 - [ ] Code documentation
 - [ ] Performance optimization

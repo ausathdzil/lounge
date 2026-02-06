@@ -86,17 +86,50 @@ export class DatabaseService {
 
     async _getSchemaVersion() {
         try {
-            // Use raw query execution since we're still initializing
-            const sql = "SELECT value FROM app_metadata WHERE key = 'schema_version'";
-            const stdout = await this._execute(sql);
+            const sql = "SELECT value FROM app_metadata WHERE key = 'schema_version';";
+            const stdout = await this._executeJson(sql);
             if (stdout && stdout.trim()) {
                 const result = JSON.parse(stdout);
-                return result.length > 0 ? result[0].value : '1';
+                return result.length > 0 ? String(result[0].value) : '1';
             }
             return '1';
         } catch (e) {
             return '1'; // Default to v1 if query fails
         }
+    }
+
+    /**
+     * Execute a read query with JSON output, bypassing the _initialized check.
+     * Used during initialization to read schema metadata.
+     */
+    async _executeJson(sql) {
+        return new Promise((resolve, reject) => {
+            try {
+                const args = ['sqlite3', '-json', this._dbPath, sql];
+
+                const proc = Gio.Subprocess.new(
+                    args,
+                    Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE
+                );
+
+                proc.communicate_utf8_async(null, null, (proc, res) => {
+                    try {
+                        const [, stdout, stderr] = proc.communicate_utf8_finish(res);
+
+                        if (!proc.get_successful()) {
+                            reject(new Error(`SQLite error: ${stderr}`));
+                            return;
+                        }
+
+                        resolve(stdout);
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            } catch (e) {
+                reject(e);
+            }
+        });
     }
 
     async _createSchema() {

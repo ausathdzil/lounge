@@ -54,6 +54,8 @@ export const MovieCard = GObject.registerClass({
             orientation: Gtk.Orientation.VERTICAL,
             spacing: 0,
             css_classes: ['card'],
+            width_request: 150,
+            overflow: Gtk.Overflow.HIDDEN,
         });
 
         this._imageCache = imageCache;

@@ -96,27 +96,26 @@ export const LoungeApplication = GObject.registerClass(
                 const css = `
                     .poster-placeholder {
                         background-color: alpha(currentColor, 0.1);
-                        border-top-left-radius: 12px;
-                        border-top-right-radius: 12px;
-                        border-bottom-left-radius: 0;
-                        border-bottom-right-radius: 0;
                     }
-                    
-                    .poster-placeholder picture,
-                    .poster-placeholder image {
-                        border-top-left-radius: 12px;
-                        border-top-right-radius: 12px;
-                    }
-                    
+
                     /* Make flowboxchild focusable and interactive */
                     flowboxchild {
                         border-radius: 12px;
                     }
-                    
-                    flowboxchild:hover .card {
-                        background-color: alpha(currentColor, 0.05);
+
+                    flowboxchild .card {
+                        box-shadow: 0 1px 3px alpha(black, 0.12), 0 1px 2px alpha(black, 0.08);
                     }
-                    
+
+                    flowboxchild:hover .card {
+                        box-shadow: 0 2px 6px alpha(black, 0.16), 0 2px 4px alpha(black, 0.12);
+                        background-color: alpha(currentColor, 0.04);
+                    }
+
+                    flowboxchild:active .card {
+                        box-shadow: 0 1px 2px alpha(black, 0.10);
+                    }
+
                     flowboxchild:focus .card {
                         outline: 2px solid @accent_color;
                         outline-offset: 2px;

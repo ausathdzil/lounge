@@ -77,11 +77,39 @@
                   </object>
                 </child>
                 <child type="title">
-                  <object class="GtkLabel" id="view_title">
-                    <property name="label" translatable="yes">Search</property>
-                    <style>
-                      <class name="title"/>
-                    </style>
+                  <object class="GtkStack" id="header_title_stack">
+                    <property name="transition-type">crossfade</property>
+                    <property name="hexpand">true</property>
+                    <child>
+                      <object class="GtkStackPage">
+                        <property name="name">search</property>
+                        <property name="child">
+                          <object class="AdwClamp">
+                            <property name="maximum-size">500</property>
+                            <property name="hexpand">true</property>
+                            <property name="child">
+                              <object class="GtkSearchEntry" id="header_search_entry">
+                                <property name="placeholder-text" translatable="yes">Search movies on TMDB</property>
+                                <property name="hexpand">true</property>
+                              </object>
+                            </property>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkStackPage">
+                        <property name="name">title</property>
+                        <property name="child">
+                          <object class="GtkLabel" id="view_title">
+                            <property name="label" translatable="yes">Log</property>
+                            <style>
+                              <class name="title"/>
+                            </style>
+                          </object>
+                        </property>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>

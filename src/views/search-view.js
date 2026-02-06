@@ -41,19 +41,13 @@ export const SearchView = GObject.registerClass({
         this._imageCache = imageCache;
         this._tmdbService = tmdbService;
         this._searchTimeout = null;
+        this._searchEntry = null;
 
         this._buildUI();
     }
 
-    _buildUI() {
-        // Search entry
-        this._searchEntry = new Gtk.SearchEntry({
-            placeholder_text: _('Search movies on TMDB'),
-            margin_start: 12,
-            margin_end: 12,
-            margin_top: 12,
-            margin_bottom: 6,
-        });
+    setSearchEntry(entry) {
+        this._searchEntry = entry;
 
         // Connect search with debounce
         this._searchEntry.connect('search-changed', () => {
@@ -67,9 +61,9 @@ export const SearchView = GObject.registerClass({
                 return GLib.SOURCE_REMOVE;
             });
         });
+    }
 
-        this.append(this._searchEntry);
-
+    _buildUI() {
         // Stack for different states
         this._stack = new Gtk.Stack({
             vexpand: true,
@@ -193,7 +187,7 @@ export const SearchView = GObject.registerClass({
             margin_end: 12,
             margin_top: 12,
             margin_bottom: 18,
-            max_children_per_line: 5,
+            max_children_per_line: 6,
             min_children_per_line: 2,
             activate_on_single_click: true,
         });

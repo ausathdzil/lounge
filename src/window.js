@@ -32,7 +32,7 @@ import { TMDBService } from './services/tmdb.js';
 export const LoungeWindow = GObject.registerClass({
     GTypeName: 'LoungeWindow',
     Template: 'resource:///io/github/ausathdzil/lounge/window.ui',
-    InternalChildren: ['sidebar_list', 'content_stack', 'split_view', 'sidebar_toggle', 'view_title'],
+    InternalChildren: ['sidebar_list', 'content_stack', 'split_view', 'sidebar_toggle', 'view_title', 'header_title_stack', 'header_search_entry'],
 }, class LoungeWindow extends Adw.ApplicationWindow {
     constructor(application) {
         super({ application });
@@ -60,6 +60,9 @@ export const LoungeWindow = GObject.registerClass({
         this._searchView = new SearchView(application.imageCache, this._tmdbService);
         this._logView = new LogView(application.database, application.imageCache, this._tmdbService);
 
+        // Pass header bar search entry to search view
+        this._searchView.setSearchEntry(this._header_search_entry);
+
 
         // Connect search view movie selection
         this._searchView.movieSelectedCallback = (movie) => {
@@ -74,8 +77,9 @@ export const LoungeWindow = GObject.registerClass({
         // Connect log view "Search Movies" CTA
         this._logView.navigateToSearchCallback = () => {
             this._content_stack.set_visible_child_name('search');
-            this._view_title.set_label('Search');
+            this._header_title_stack.set_visible_child_name('search');
             this._sidebar_list.select_row(this._sidebar_list.get_row_at_index(0));
+            this._header_search_entry.grab_focus();
         };
 
         // Add views to stack
@@ -90,11 +94,17 @@ export const LoungeWindow = GObject.registerClass({
         this._sidebar_list.connect('row-activated', (listbox, row) => {
             const index = row.get_index();
             const views = ['search', 'log'];
-            const titles = ['Search', 'Log'];
             if (index >= 0 && index < views.length) {
                 this._content_stack.set_visible_child_name(views[index]);
-                this._view_title.set_label(titles[index]);
-                
+
+                // Switch header title stack
+                if (views[index] === 'search') {
+                    this._header_title_stack.set_visible_child_name('search');
+                } else {
+                    this._view_title.set_label(views[index].charAt(0).toUpperCase() + views[index].slice(1));
+                    this._header_title_stack.set_visible_child_name('title');
+                }
+
                 // Refresh log view when navigating to it
                 if (views[index] === 'log') {
                     this._logView.refresh();
@@ -102,8 +112,9 @@ export const LoungeWindow = GObject.registerClass({
             }
         });
 
-        // Select first row by default
+        // Select first row by default (Search)
         this._sidebar_list.select_row(this._sidebar_list.get_row_at_index(0));
+        this._header_title_stack.set_visible_child_name('search');
 
         // Bind toggle button to split view
         this._sidebar_toggle.bind_property(

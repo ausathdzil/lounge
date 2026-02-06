@@ -142,7 +142,18 @@ export const MovieDetailsDialog = GObject.registerClass({
             spacing: 24,
         });
 
-        // --- Poster ---
+        mainBox.append(this._buildPosterSection());
+        mainBox.append(this._buildTitleSection());
+        mainBox.append(this._buildLogButton());
+        mainBox.append(this._buildDetailsGroup());
+        mainBox.append(this._buildOverviewGroup());
+
+        clamp.set_child(mainBox);
+        scrolled.set_child(clamp);
+        return scrolled;
+    }
+
+    _buildPosterSection() {
         this._posterBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
             halign: Gtk.Align.CENTER,
@@ -152,7 +163,6 @@ export const MovieDetailsDialog = GObject.registerClass({
             css_classes: ['card'],
         });
 
-        // Placeholder
         const posterPlaceholder = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
             halign: Gtk.Align.FILL,
@@ -173,14 +183,15 @@ export const MovieDetailsDialog = GObject.registerClass({
         posterPlaceholder.append(posterIcon);
         this._posterBox.append(posterPlaceholder);
 
-        mainBox.append(this._posterBox);
-
         // Load poster image
         if (this._imageCache && this._tmdbService && this._movie.poster_path) {
             this._loadPosterImage();
         }
 
-        // --- Title + Year ---
+        return this._posterBox;
+    }
+
+    _buildTitleSection() {
         const titleBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
             spacing: 4,
@@ -204,9 +215,10 @@ export const MovieDetailsDialog = GObject.registerClass({
             titleBox.append(subtitleLabel);
         }
 
-        mainBox.append(titleBox);
+        return titleBox;
+    }
 
-        // --- Log button (placed early so user doesn't have to scroll) ---
+    _buildLogButton() {
         this._logButton = new Gtk.Button({
             css_classes: ['suggested-action', 'pill'],
             halign: Gtk.Align.CENTER,
@@ -220,9 +232,10 @@ export const MovieDetailsDialog = GObject.registerClass({
         this._logButton.set_child(this._logButtonContent);
         this._logButton.connect('clicked', () => this._openLogDialog());
 
-        mainBox.append(this._logButton);
+        return this._logButton;
+    }
 
-        // --- Details group ---
+    _buildDetailsGroup() {
         this._detailsGroup = new Adw.PreferencesGroup();
 
         // TMDB Rating row
@@ -293,12 +306,13 @@ export const MovieDetailsDialog = GObject.registerClass({
         this._directorRow.add_suffix(this._directorSuffix);
         this._detailsGroup.add(this._directorRow);
 
-        mainBox.append(this._detailsGroup);
-
         // Update meta fields if data is already available
         this._updateMetaFields();
 
-        // --- Overview group ---
+        return this._detailsGroup;
+    }
+
+    _buildOverviewGroup() {
         this._overviewGroup = new Adw.PreferencesGroup({
             title: _('Overview'),
         });
@@ -311,11 +325,7 @@ export const MovieDetailsDialog = GObject.registerClass({
         });
         this._overviewGroup.add(this._overviewLabel);
 
-        mainBox.append(this._overviewGroup);
-
-        clamp.set_child(mainBox);
-        scrolled.set_child(clamp);
-        return scrolled;
+        return this._overviewGroup;
     }
 
     _updateMetaFields() {

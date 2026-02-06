@@ -20,16 +20,10 @@
 
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
-import Adw from 'gi://Adw';
 import Gdk from 'gi://Gdk';
 
 export const LogEntryCard = GObject.registerClass({
     GTypeName: 'LogEntryCard',
-    Signals: {
-        'activated': {
-            param_types: [GObject.TYPE_JSOBJECT],
-        },
-    },
 }, class LogEntryCard extends Gtk.Box {
     constructor(logEntry, imageCache, tmdbService) {
         super({
@@ -53,7 +47,7 @@ export const LogEntryCard = GObject.registerClass({
         // Poster box for sizing
         const posterBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
-            height_request: 225,
+            height_request: 300,
             css_classes: ['poster-placeholder'],
         });
         
@@ -83,30 +77,17 @@ export const LogEntryCard = GObject.registerClass({
             tooltip_text: `Your rating: ${this._logEntry.user_rating}/5`,
         });
 
-        // Style the badge with custom CSS
-        const cssProvider = new Gtk.CssProvider();
-        cssProvider.load_from_string(`
-            .badge {
-                background-color: @accent_bg_color;
-                color: @accent_fg_color;
-                padding: 4px 8px;
-                border-radius: 6px;
-                font-weight: bold;
-                font-size: 0.9em;
-            }
-        `);
-
         overlay.add_overlay(ratingBadge);
         this.append(overlay);
 
         // Info section
         const infoBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
-            spacing: 6,
-            margin_start: 12,
-            margin_end: 12,
-            margin_top: 12,
-            margin_bottom: 12,
+            spacing: 4,
+            margin_start: 8,
+            margin_end: 8,
+            margin_top: 8,
+            margin_bottom: 8,
         });
 
         // Title
@@ -117,39 +98,21 @@ export const LogEntryCard = GObject.registerClass({
             xalign: 0,
             lines: 2,
             ellipsize: 3, // PANGO_ELLIPSIZE_END
-            css_classes: ['heading'],
+            css_classes: ['title-4'],
         });
         infoBox.append(titleLabel);
 
-        // Year and date
-        const metaBox = new Gtk.Box({
-            orientation: Gtk.Orientation.VERTICAL,
-            spacing: 2,
-        });
-
-        const yearLabel = new Gtk.Label({
-            label: this._logEntry.year ? this._logEntry.year.toString() : '',
+        // Year and watched date on one line
+        const metaLabel = new Gtk.Label({
+            label: this._logEntry.year
+                ? `${this._logEntry.year} \u2022 ${this._formatDate(this._logEntry.watched_date)}`
+                : this._formatDate(this._logEntry.watched_date),
             xalign: 0,
+            ellipsize: 3,
             css_classes: ['caption', 'dim-label'],
         });
-        metaBox.append(yearLabel);
-
-        const dateLabel = new Gtk.Label({
-            label: `Watched: ${this._formatDate(this._logEntry.watched_date)}`,
-            xalign: 0,
-            css_classes: ['caption', 'dim-label'],
-        });
-        metaBox.append(dateLabel);
-
-        infoBox.append(metaBox);
+        infoBox.append(metaLabel);
         this.append(infoBox);
-
-        // Make card clickable
-        const gestureClick = new Gtk.GestureClick();
-        gestureClick.connect('released', () => {
-            this.emit('activated', this._logEntry);
-        });
-        this.add_controller(gestureClick);
     }
 
     async _loadPoster() {

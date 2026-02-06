@@ -74,6 +74,12 @@ export const LogEntryDialog = GObject.registerClass({
             spacing: 24,
         });
 
+        // Error banner (initially hidden)
+        this._errorBanner = new Adw.Banner({
+            revealed: false,
+        });
+        box.append(this._errorBanner);
+
         // Movie context line
         const movieContext = this._movie.year
             ? `${this._movie.title} (${this._movie.year})`
@@ -143,41 +149,6 @@ export const LogEntryDialog = GObject.registerClass({
         scrolled.set_child(clamp);
         toolbarView.set_content(scrolled);
 
-        // Bottom bar container (error + buttons)
-        const bottomBar = new Gtk.Box({
-            orientation: Gtk.Orientation.VERTICAL,
-            spacing: 0,
-        });
-
-        // Error display with revealer
-        this._errorRevealer = new Gtk.Revealer({
-            reveal_child: false,
-            transition_type: Gtk.RevealerTransitionType.SWING_DOWN,
-            transition_duration: 200,
-        });
-
-        this._errorLabel = new Gtk.Label({
-            wrap: true,
-            xalign: 0.5,
-            margin_top: 8,
-            margin_bottom: 8,
-            margin_start: 16,
-            margin_end: 16,
-            css_classes: ['log-entry-error'],
-        });
-
-        const errorBox = new Gtk.Box({
-            orientation: Gtk.Orientation.VERTICAL,
-            margin_start: 12,
-            margin_end: 12,
-            margin_top: 8,
-            css_classes: ['log-entry-error-box'],
-        });
-        errorBox.append(this._errorLabel);
-
-        this._errorRevealer.set_child(errorBox);
-        bottomBar.append(this._errorRevealer);
-
         // Button bar
         const buttonBox = new Gtk.Box({
             spacing: 8,
@@ -215,8 +186,7 @@ export const LogEntryDialog = GObject.registerClass({
         this._saveButton.connect('clicked', () => this._saveLog());
         buttonBox.append(this._saveButton);
 
-        bottomBar.append(buttonBox);
-        toolbarView.add_bottom_bar(bottomBar);
+        toolbarView.add_bottom_bar(buttonBox);
 
         this.set_child(toolbarView);
     }
@@ -313,15 +283,15 @@ export const LogEntryDialog = GObject.registerClass({
     }
 
     _showError(message) {
-        this._errorLabel.label = message;
-        this._errorRevealer.reveal_child = true;
+        this._errorBanner.title = message;
+        this._errorBanner.revealed = true;
 
         // Auto-hide after 5 seconds
         if (this._errorTimeout) {
             clearTimeout(this._errorTimeout);
         }
         this._errorTimeout = setTimeout(() => {
-            this._errorRevealer.reveal_child = false;
+            this._errorBanner.revealed = false;
         }, 5000);
     }
 
@@ -329,6 +299,6 @@ export const LogEntryDialog = GObject.registerClass({
         if (this._errorTimeout) {
             clearTimeout(this._errorTimeout);
         }
-        this._errorRevealer.reveal_child = false;
+        this._errorBanner.revealed = false;
     }
 });

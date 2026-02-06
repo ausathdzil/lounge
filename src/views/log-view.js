@@ -127,6 +127,17 @@ export const LogView = GObject.registerClass({
             margin_top: 12,
             margin_bottom: 18,
             valign: Gtk.Align.START,
+            max_children_per_line: 6,
+            min_children_per_line: 2,
+            activate_on_single_click: true,
+        });
+
+        // Handle activation (click or keyboard Enter/Space)
+        this._flowBox.connect('child-activated', (flowBox, child) => {
+            const card = child.get_child();
+            if (card && card._logEntry && this.logEntrySelectedCallback) {
+                this.logEntrySelectedCallback(card._logEntry);
+            }
         });
 
         scrolled.set_child(this._flowBox);
@@ -213,11 +224,6 @@ export const LogView = GObject.registerClass({
         // Add log entry cards
         this._logEntries.forEach(logEntry => {
             const card = new LogEntryCard(logEntry, this._imageCache, this._tmdbService);
-            card.connect('activated', (_, entry) => {
-                if (this.logEntrySelectedCallback) {
-                    this.logEntrySelectedCallback(entry);
-                }
-            });
             this._flowBox.append(card);
         });
 

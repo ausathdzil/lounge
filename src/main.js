@@ -121,13 +121,13 @@ export const LoungeApplication = GObject.registerClass(
                         outline-offset: 2px;
                     }
 
-                    .log-entry-error-box {
-                        background-color: alpha(@error_color, 0.15);
-                        border-radius: 8px;
-                    }
-
-                    .log-entry-error {
-                        color: @error_color;
+                    .badge {
+                        background-color: @accent_bg_color;
+                        color: @accent_fg_color;
+                        padding: 4px 8px;
+                        border-radius: 6px;
+                        font-weight: bold;
+                        font-size: 0.9em;
                     }
                 `;
                 provider.load_from_string(css);

@@ -120,6 +120,15 @@ export const LoungeApplication = GObject.registerClass(
                         outline: 2px solid @accent_color;
                         outline-offset: 2px;
                     }
+
+                    .log-entry-error-box {
+                        background-color: alpha(@error_color, 0.15);
+                        border-radius: 8px;
+                    }
+
+                    .log-entry-error {
+                        color: @error_color;
+                    }
                 `;
                 provider.load_from_string(css);
                 Gtk.StyleContext.add_provider_for_display(

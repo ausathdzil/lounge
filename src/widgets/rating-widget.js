@@ -71,7 +71,7 @@ export const RatingWidget = GObject.registerClass({
         // Create 5 star buttons
         for (let i = 1; i <= 5; i++) {
             const button = new Gtk.Button({
-                icon_name: 'star-outline-symbolic',
+                icon_name: 'non-starred-symbolic',
                 css_classes: ['flat', 'circular'],
                 width_request: 24,
                 height_request: 24,

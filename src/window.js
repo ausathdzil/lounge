@@ -152,7 +152,7 @@ export const LoungeWindow = GObject.registerClass({
     }
 
     _showMovieDetails(movie) {
-        const dialog = new MovieDetailsDialog(movie, this._application.database, this._tmdbService);
+        const dialog = new MovieDetailsDialog(movie, this._application.database, this._tmdbService, this._application.imageCache);
         
         // Refresh log view when log changes
         dialog.connect('log-changed', () => {

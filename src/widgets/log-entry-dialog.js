@@ -24,27 +24,27 @@ export const LogEntryDialog = GObject.registerClass({
 }, class LogEntryDialog extends Adw.Dialog {
     constructor(movie, existingLog = null) {
         const title = existingLog ? _('Edit Log Entry') : _('Log Movie');
-        
+
         super({
             title: title,
-            content_width: 400,
-            content_height: 450,
+            content_width: 420,
+            content_height: 480,
             can_close: true,
         });
 
         this._movie = movie;
         this._existingLog = existingLog;
         this._logId = existingLog ? existingLog.log_id : null;
-        
+
         this._buildUI();
-        
+
         if (existingLog) {
             this._ratingWidget.rating = existingLog.user_rating;
-            this._dateEntry.set_text(existingLog.watched_date);
-            this._notesEntry.set_text(existingLog.notes || '');
+            this._dateRow.text = existingLog.watched_date;
+            this._notesRow.text = existingLog.notes || '';
         } else {
             const today = new Date().toISOString().split('T')[0];
-            this._dateEntry.set_text(today);
+            this._dateRow.text = today;
         }
     }
 
@@ -62,7 +62,7 @@ export const LogEntryDialog = GObject.registerClass({
         });
 
         const clamp = new Adw.Clamp({
-            maximum_size: 400,
+            maximum_size: 420,
             margin_start: 24,
             margin_end: 24,
             margin_top: 24,
@@ -74,68 +74,24 @@ export const LogEntryDialog = GObject.registerClass({
             spacing: 24,
         });
 
-        // Error banner (initially hidden)
-        this._errorBanner = new Adw.Banner({
-            revealed: false,
-        });
-        box.append(this._errorBanner);
-
-        // Movie info header
-        const movieBox = new Gtk.Box({
-            orientation: Gtk.Orientation.HORIZONTAL,
-            spacing: 12,
-        });
-
-        const posterBox = new Gtk.Box({
-            orientation: Gtk.Orientation.VERTICAL,
-            width_request: 60,
-            height_request: 90,
-            css_classes: ['poster-placeholder', 'card'],
-        });
-
-        const posterIcon = new Gtk.Image({
-            icon_name: 'video-x-generic-symbolic',
-            pixel_size: 32,
-            opacity: 0.5,
-            valign: Gtk.Align.CENTER,
-            vexpand: true,
-        });
-        posterBox.append(posterIcon);
-        movieBox.append(posterBox);
-
-        const titleBox = new Gtk.Box({
-            orientation: Gtk.Orientation.VERTICAL,
-            spacing: 4,
-            valign: Gtk.Align.CENTER,
-        });
-
-        const titleLabel = new Gtk.Label({
-            label: this._movie.title,
+        // Movie context line
+        const movieContext = this._movie.year
+            ? `${this._movie.title} (${this._movie.year})`
+            : this._movie.title;
+        const movieLabel = new Gtk.Label({
+            label: movieContext,
             wrap: true,
-            xalign: 0,
-            css_classes: ['title-3'],
-        });
-        titleBox.append(titleLabel);
-
-        const yearLabel = new Gtk.Label({
-            label: this._movie.year ? `(${this._movie.year})` : '',
-            xalign: 0,
+            xalign: 0.5,
+            justify: Gtk.Justification.CENTER,
             css_classes: ['dim-label'],
         });
-        titleBox.append(yearLabel);
+        box.append(movieLabel);
 
-        movieBox.append(titleBox);
-        box.append(movieBox);
+        // --- Rating group ---
+        const ratingGroup = new Adw.PreferencesGroup();
 
-        // Preferences group
-        const prefsGroup = new Adw.PreferencesGroup({
-            title: _('Log Details'),
-        });
-
-        // Rating row
         const ratingRow = new Adw.ActionRow({
-            title: _('Rating'),
-            subtitle: _('How would you rate this movie?'),
+            title: _('Your Rating'),
         });
 
         this._ratingWidget = new RatingWidget({
@@ -147,56 +103,82 @@ export const LogEntryDialog = GObject.registerClass({
             this._clearError();
         });
         ratingRow.add_suffix(this._ratingWidget);
-        prefsGroup.add(ratingRow);
+        ratingGroup.add(ratingRow);
+
+        box.append(ratingGroup);
+
+        // --- Date & Notes group ---
+        const detailsGroup = new Adw.PreferencesGroup();
 
         // Date row
-        const dateRow = new Adw.ActionRow({
-            title: 'Watched Date',
+        this._dateRow = new Adw.EntryRow({
+            title: _('Watched Date'),
+            input_purpose: Gtk.InputPurpose.FREE_FORM,
         });
-        const dateBox = new Gtk.Box({
-            spacing: 8,
-            orientation: Gtk.Orientation.HORIZONTAL,
-        });
-        this._dateEntry = new Gtk.Entry({
-            placeholder_text: 'YYYY-MM-DD',
-            hexpand: true,
-            input_purpose: Gtk.InputPurpose.DIGITS,
-        });
-        this._dateEntry.connect('changed', () => {
+        this._dateRow.connect('changed', () => {
             this._clearError();
         });
+
         const todayButton = new Gtk.Button({
-            label: 'Today',
+            label: _('Today'),
             valign: Gtk.Align.CENTER,
+            css_classes: ['flat'],
         });
         todayButton.connect('clicked', () => {
             const today = new Date().toISOString().split('T')[0];
-            this._dateEntry.text = today;
+            this._dateRow.text = today;
         });
-        dateBox.append(this._dateEntry);
-        dateBox.append(todayButton);
-        dateRow.add_suffix(dateBox);
-        dateRow.set_activatable_widget(this._dateEntry);
-        prefsGroup.add(dateRow);
+        this._dateRow.add_suffix(todayButton);
+        detailsGroup.add(this._dateRow);
 
         // Notes row
-        const notesRow = new Adw.ActionRow({
-            title: 'Notes',
+        this._notesRow = new Adw.EntryRow({
+            title: _('Notes'),
         });
-        this._notesEntry = new Gtk.Entry({
-            placeholder_text: 'Your thoughts about this movie...',
-            hexpand: true,
-        });
-        notesRow.add_suffix(this._notesEntry);
-        notesRow.set_activatable_widget(this._notesEntry);
-        prefsGroup.add(notesRow);
+        detailsGroup.add(this._notesRow);
 
-        box.append(prefsGroup);
+        box.append(detailsGroup);
+
         clamp.set_child(box);
         scrolled.set_child(clamp);
         toolbarView.set_content(scrolled);
 
-        // Button box
+        // Bottom bar container (error + buttons)
+        const bottomBar = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            spacing: 0,
+        });
+
+        // Error display with revealer
+        this._errorRevealer = new Gtk.Revealer({
+            reveal_child: false,
+            transition_type: Gtk.RevealerTransitionType.SWING_DOWN,
+            transition_duration: 200,
+        });
+
+        this._errorLabel = new Gtk.Label({
+            wrap: true,
+            xalign: 0.5,
+            margin_top: 8,
+            margin_bottom: 8,
+            margin_start: 16,
+            margin_end: 16,
+            css_classes: ['log-entry-error'],
+        });
+
+        const errorBox = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            margin_start: 12,
+            margin_end: 12,
+            margin_top: 8,
+            css_classes: ['log-entry-error-box'],
+        });
+        errorBox.append(this._errorLabel);
+
+        this._errorRevealer.set_child(errorBox);
+        bottomBar.append(this._errorRevealer);
+
+        // Button bar
         const buttonBox = new Gtk.Box({
             spacing: 8,
             margin_top: 12,
@@ -208,46 +190,52 @@ export const LogEntryDialog = GObject.registerClass({
 
         if (this._existingLog) {
             this._deleteButton = new Gtk.Button({
-                label: 'Delete',
+                label: _('Delete'),
                 css_classes: ['destructive-action'],
             });
             this._deleteButton.connect('clicked', () => this._showDeleteConfirmation());
             buttonBox.append(this._deleteButton);
+
+            // Spacer to push Delete to the left
+            const spacer = new Gtk.Box({ hexpand: true });
+            buttonBox.append(spacer);
+            buttonBox.halign = Gtk.Align.FILL;
         }
 
         this._cancelButton = new Gtk.Button({
-            label: 'Cancel',
+            label: _('Cancel'),
         });
         this._cancelButton.connect('clicked', () => this.close());
         buttonBox.append(this._cancelButton);
 
         this._saveButton = new Gtk.Button({
-            label: 'Save',
+            label: _('Save'),
             css_classes: ['suggested-action'],
         });
         this._saveButton.connect('clicked', () => this._saveLog());
         buttonBox.append(this._saveButton);
 
-        toolbarView.add_bottom_bar(buttonBox);
+        bottomBar.append(buttonBox);
+        toolbarView.add_bottom_bar(bottomBar);
 
         this.set_child(toolbarView);
     }
 
     _saveLog() {
         const rating = this._ratingWidget.rating;
-        const date = this._dateEntry.text.trim();
-        const notes = this._notesEntry.text.trim();
+        const date = this._dateRow.text.trim();
+        const notes = this._notesRow.text.trim();
 
         // Validate rating
         if (rating < 1 || rating > 5) {
-            this._showError('Please select a rating (1-5 stars)');
+            this._showError(_('Please select a rating (1-5 stars)'));
             return;
         }
 
         // Validate date format (basic check)
         const datePattern = /^\d{4}-\d{2}-\d{2}$/;
         if (!date || !datePattern.test(date)) {
-            this._showError('Please enter a valid date (YYYY-MM-DD)');
+            this._showError(_('Please enter a valid date (YYYY-MM-DD)'));
             return;
         }
 
@@ -256,23 +244,23 @@ export const LogEntryDialog = GObject.registerClass({
         const year = parseInt(parts[0], 10);
         const month = parseInt(parts[1], 10);
         const day = parseInt(parts[2], 10);
-        
+
         if (month < 1 || month > 12) {
-            this._showError('Invalid month (must be 01-12)');
+            this._showError(_('Invalid month (must be 01-12)'));
             return;
         }
-        
+
         if (day < 1 || day > 31) {
-            this._showError('Invalid day (must be 01-31)');
+            this._showError(_('Invalid day (must be 01-31)'));
             return;
         }
-        
+
         // Check if the date is valid using Date object
         const watchedDate = new Date(year, month - 1, day);
-        if (watchedDate.getFullYear() !== year || 
-            watchedDate.getMonth() !== month - 1 || 
+        if (watchedDate.getFullYear() !== year ||
+            watchedDate.getMonth() !== month - 1 ||
             watchedDate.getDate() !== day) {
-            this._showError('Invalid date (e.g., Feb 30 does not exist)');
+            this._showError(_('Invalid date (e.g., Feb 30 does not exist)'));
             return;
         }
 
@@ -280,7 +268,7 @@ export const LogEntryDialog = GObject.registerClass({
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (watchedDate > today) {
-            this._showError('Watched date cannot be in the future');
+            this._showError(_('Watched date cannot be in the future'));
             return;
         }
 
@@ -304,12 +292,12 @@ export const LogEntryDialog = GObject.registerClass({
 
     _showDeleteConfirmation() {
         const dialog = new Adw.AlertDialog({
-            heading: 'Delete Log Entry?',
-            body: 'This action cannot be undone.',
+            heading: _('Delete Log Entry?'),
+            body: _('This action cannot be undone.'),
         });
 
-        dialog.add_response('cancel', 'Cancel');
-        dialog.add_response('delete', 'Delete');
+        dialog.add_response('cancel', _('Cancel'));
+        dialog.add_response('delete', _('Delete'));
         dialog.set_response_appearance('delete', Adw.ResponseAppearance.DESTRUCTIVE);
         dialog.set_default_response('cancel');
         dialog.set_close_response('cancel');
@@ -325,15 +313,15 @@ export const LogEntryDialog = GObject.registerClass({
     }
 
     _showError(message) {
-        this._errorBanner.title = message;
-        this._errorBanner.revealed = true;
-        
+        this._errorLabel.label = message;
+        this._errorRevealer.reveal_child = true;
+
         // Auto-hide after 5 seconds
         if (this._errorTimeout) {
             clearTimeout(this._errorTimeout);
         }
         this._errorTimeout = setTimeout(() => {
-            this._errorBanner.revealed = false;
+            this._errorRevealer.reveal_child = false;
         }, 5000);
     }
 
@@ -341,6 +329,6 @@ export const LogEntryDialog = GObject.registerClass({
         if (this._errorTimeout) {
             clearTimeout(this._errorTimeout);
         }
-        this._errorBanner.revealed = false;
+        this._errorRevealer.reveal_child = false;
     }
 });

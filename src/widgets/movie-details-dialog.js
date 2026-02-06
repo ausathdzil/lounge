@@ -168,6 +168,7 @@ export const MovieDetailsDialog = GObject.registerClass({
             halign: Gtk.Align.CENTER,
             valign: Gtk.Align.CENTER,
             vexpand: true,
+            accessible_role: Gtk.AccessibleRole.PRESENTATION,
         });
         posterPlaceholder.append(posterIcon);
         this._posterBox.append(posterPlaceholder);
@@ -209,6 +210,7 @@ export const MovieDetailsDialog = GObject.registerClass({
         this._logButton = new Gtk.Button({
             css_classes: ['suggested-action', 'pill'],
             halign: Gtk.Align.CENTER,
+            tooltip_text: _('Log this movie to your diary'),
         });
 
         this._logButtonContent = new Adw.ButtonContent({
@@ -230,6 +232,7 @@ export const MovieDetailsDialog = GObject.registerClass({
             });
             ratingRow.add_prefix(new Gtk.Image({
                 icon_name: 'starred-symbolic',
+                accessible_role: Gtk.AccessibleRole.PRESENTATION,
             }));
             ratingRow.add_suffix(new Gtk.Label({
                 label: `${this._movie.tmdb_rating}/10`,
@@ -246,6 +249,7 @@ export const MovieDetailsDialog = GObject.registerClass({
         });
         this._runtimeRow.add_prefix(new Gtk.Image({
             icon_name: 'preferences-system-time-symbolic',
+            accessible_role: Gtk.AccessibleRole.PRESENTATION,
         }));
         this._runtimeSuffix = new Gtk.Label({
             css_classes: ['dim-label'],
@@ -261,6 +265,7 @@ export const MovieDetailsDialog = GObject.registerClass({
         });
         this._genresRow.add_prefix(new Gtk.Image({
             icon_name: 'bookmark-new-symbolic',
+            accessible_role: Gtk.AccessibleRole.PRESENTATION,
         }));
         this._genresSuffix = new Gtk.Label({
             css_classes: ['dim-label'],
@@ -279,6 +284,7 @@ export const MovieDetailsDialog = GObject.registerClass({
         });
         this._directorRow.add_prefix(new Gtk.Image({
             icon_name: 'avatar-default-symbolic',
+            accessible_role: Gtk.AccessibleRole.PRESENTATION,
         }));
         this._directorSuffix = new Gtk.Label({
             css_classes: ['dim-label'],
@@ -374,6 +380,7 @@ export const MovieDetailsDialog = GObject.registerClass({
                     hexpand: true,
                     vexpand: true,
                     height_request: 300,
+                    alternative_text: `Poster for ${this._movie.title}`,
                 });
 
                 this._posterBox.append(picture);
@@ -419,15 +426,15 @@ export const MovieDetailsDialog = GObject.registerClass({
 
     _updateLogStatus() {
         if (this._logEntry) {
-            const stars = '\u2605'.repeat(this._logEntry.user_rating);
-            const emptyStars = '\u2606'.repeat(5 - this._logEntry.user_rating);
-            this._logButtonContent.label = `${stars}${emptyStars} \u2022 ${this._logEntry.watched_date}`;
+            this._logButtonContent.label = `${this._logEntry.user_rating}/5 \u2022 ${this._logEntry.watched_date}`;
             this._logButtonContent.icon_name = 'document-edit-symbolic';
             this._logButton.css_classes = ['pill'];
+            this._logButton.tooltip_text = _('Edit your log entry');
         } else {
             this._logButtonContent.label = _('Log Movie');
             this._logButtonContent.icon_name = 'list-add-symbolic';
             this._logButton.css_classes = ['suggested-action', 'pill'];
+            this._logButton.tooltip_text = _('Log this movie to your diary');
         }
     }
 

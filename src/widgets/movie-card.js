@@ -143,6 +143,7 @@ export const MovieCard = GObject.registerClass({
             halign: Gtk.Align.CENTER,
             valign: Gtk.Align.CENTER,
             vexpand: true,
+            accessible_role: Gtk.AccessibleRole.PRESENTATION,
         });
 
         this._posterBox.append(icon);
@@ -197,6 +198,7 @@ export const MovieCard = GObject.registerClass({
                     hexpand: true,
                     vexpand: true,
                     height_request: 300,
+                    alternative_text: `Poster for ${this.title || 'Unknown'}`,
                 });
 
                 this._posterBox.append(picture);

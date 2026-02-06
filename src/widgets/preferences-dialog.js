@@ -102,6 +102,7 @@ export const PreferencesDialog = GObject.registerClass({
             valign: Gtk.Align.CENTER,
             css_classes: ['body'],
             visible: false,
+            accessible_role: Gtk.AccessibleRole.ALERT,
         });
 
         buttonBox.append(this._testButton);

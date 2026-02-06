@@ -57,6 +57,7 @@ export const LogEntryCard = GObject.registerClass({
             content_fit: Gtk.ContentFit.COVER,
             vexpand: true,
             hexpand: true,
+            alternative_text: `Poster for ${this._logEntry.title}`,
         });
 
         if (this._logEntry.poster_path) {
@@ -134,7 +135,7 @@ export const LogEntryCard = GObject.registerClass({
     }
 
     _formatRating(rating) {
-        return '★'.repeat(Math.round(rating));
+        return `${Math.round(rating)}/5`;
     }
 
     _formatDate(dateString) {

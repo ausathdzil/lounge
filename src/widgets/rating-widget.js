@@ -20,6 +20,7 @@
 
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
+import Gdk from 'gi://Gdk';
 
 export const RatingWidget = GObject.registerClass({
     GTypeName: 'RatingWidget',
@@ -52,6 +53,7 @@ export const RatingWidget = GObject.registerClass({
         super({
             orientation: Gtk.Orientation.HORIZONTAL,
             spacing: 2,
+            tooltip_text: 'Rating: Not rated',
             ...gtkParams
         });
 
@@ -60,6 +62,31 @@ export const RatingWidget = GObject.registerClass({
         this._starButtons = [];
 
         this._buildUI();
+
+        // Arrow key navigation for accessibility
+        const keyController = new Gtk.EventControllerKey();
+        keyController.connect('key-pressed', (_controller, keyval, _keycode, _state) => {
+            if (!this._interactive) return false;
+
+            if (keyval === Gdk.KEY_Right || keyval === Gdk.KEY_Up) {
+                const newRating = Math.min(5, this._rating + 1);
+                if (newRating !== this._rating) {
+                    this.rating = newRating;
+                    this.emit('rating-changed', newRating);
+                }
+                return true;
+            } else if (keyval === Gdk.KEY_Left || keyval === Gdk.KEY_Down) {
+                const newRating = Math.max(0, this._rating - 1);
+                if (newRating !== this._rating) {
+                    this.rating = newRating;
+                    this.emit('rating-changed', newRating);
+                }
+                return true;
+            }
+
+            return false;
+        });
+        this.add_controller(keyController);
         
         // Now set rating after UI is built
         if (rating !== undefined) {
@@ -75,6 +102,7 @@ export const RatingWidget = GObject.registerClass({
                 css_classes: ['flat', 'circular'],
                 width_request: 24,
                 height_request: 24,
+                tooltip_text: `Rate ${i} out of 5`,
             });
 
             // Store the rating value this button represents
@@ -125,7 +153,12 @@ export const RatingWidget = GObject.registerClass({
         if (!this._starButtons || this._starButtons.length === 0) {
             return;
         }
-        
+
+        // Update container accessible description
+        this.tooltip_text = this._rating > 0
+            ? `Rating: ${this._rating} out of 5 stars`
+            : 'Rating: Not rated';
+
         this._starButtons.forEach((button, index) => {
             const starNumber = index + 1;
             
@@ -140,14 +173,21 @@ export const RatingWidget = GObject.registerClass({
                 button.icon_name = 'non-starred-symbolic';
                 button.css_classes = ['flat', 'circular', 'dim-label'];
             }
+
+            // Update tooltip to reflect current state
+            if (this._rating > 0 && starNumber <= this._rating) {
+                button.tooltip_text = `${starNumber} of ${this._rating} star${this._rating !== 1 ? 's' : ''} selected`;
+            } else {
+                button.tooltip_text = `Rate ${starNumber} out of 5`;
+            }
         });
     }
 
-    // Convenience method to get rating as stars string
+    // Convenience method to get rating as accessible text
     getRatingText() {
         if (this._rating === 0) {
             return _('Not rated');
         }
-        return '★'.repeat(this._rating) + '☆'.repeat(5 - this._rating);
+        return `${this._rating}/5`;
     }
 });

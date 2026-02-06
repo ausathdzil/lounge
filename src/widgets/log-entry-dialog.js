@@ -7,6 +7,7 @@
 
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
+import Gdk from 'gi://Gdk';
 import Adw from 'gi://Adw';
 
 import { RatingWidget } from './rating-widget.js';
@@ -37,6 +38,18 @@ export const LogEntryDialog = GObject.registerClass({
         this._logId = existingLog ? existingLog.log_id : null;
 
         this._buildUI();
+
+        // Ctrl+Enter shortcut to save
+        const shortcutController = new Gtk.ShortcutController();
+        shortcutController.set_scope(Gtk.ShortcutScope.MANAGED);
+        shortcutController.add_shortcut(new Gtk.Shortcut({
+            trigger: Gtk.ShortcutTrigger.parse_string('<Control>Return'),
+            action: Gtk.CallbackAction.new(() => {
+                this._saveLog();
+                return true;
+            }),
+        }));
+        this.add_controller(shortcutController);
 
         if (existingLog) {
             this._ratingWidget.rating = existingLog.user_rating;

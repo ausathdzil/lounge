@@ -28,9 +28,6 @@ import { removeAllChildren } from '../utils/ui.js';
 
 export const SearchView = GObject.registerClass({
     GTypeName: 'SearchView',
-    Signals: {
-        'movie-selected': {},
-    },
 }, class SearchView extends Gtk.Box {
     constructor(imageCache = null, tmdbService = null) {
         super({
@@ -197,7 +194,6 @@ export const SearchView = GObject.registerClass({
         this._flowBox.connect('child-activated', (flowBox, child) => {
             const card = child.get_child();
             if (card && card._movieData) {
-                this.emit('movie-selected');
                 this._onMovieSelected(card._movieData);
             }
         });

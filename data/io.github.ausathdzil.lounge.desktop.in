@@ -1,10 +1,11 @@
 [Desktop Entry]
-Name=lounge
+Name=Lounge
+Comment=Track your movie watches
 Exec=io.github.ausathdzil.lounge
 Icon=io.github.ausathdzil.lounge
 Terminal=false
 Type=Application
-Categories=Utility;
-Keywords=GTK;
+Categories=Utility;GTK;
+Keywords=Movie;Film;Tracker;Log;Rating;TMDB;
 StartupNotify=true
 DBusActivatable=true

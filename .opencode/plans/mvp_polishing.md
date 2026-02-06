@@ -70,12 +70,13 @@ Minimum Viable Product (MVP) focusing on core functionality: **Search movies and
 - [ ] Image loading failures
 
 #### Release Preparation
+- [x] App metadata (metainfo.xml)
+- [x] Desktop file
+- [x] README with installation instructions
+- [x] LICENSE file (COPYING)
+- [x] Version bump to 1.0.0
 - [ ] App icon and branding
-- [ ] App metadata (appdata.xml)
-- [ ] Desktop file
-- [ ] README with installation instructions
 - [ ] CHANGELOG
-- [ ] Version bump to 1.0.0
 - [ ] Flatpak manifest validation
 - [ ] Flathub submission
 

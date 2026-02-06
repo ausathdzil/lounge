@@ -62,7 +62,7 @@ export class TMDBService {
                 total_results: response.total_results,
             };
         } catch (error) {
-            logError(error, 'Failed to search movies');
+            console.error('Failed to search movies:', error);
             throw error;
         }
     }
@@ -95,7 +95,7 @@ export class TMDBService {
                 tmdb_rating: movie.vote_average,
             };
         } catch (error) {
-            logError(error, `Failed to get movie details for ID ${movieId}`);
+            console.error(`Failed to get movie details for ID ${movieId}:`, error);
             throw error;
         }
     }
@@ -108,7 +108,7 @@ export class TMDBService {
             const director = credits.crew.find(person => person.job === 'Director');
             return director ? director.name : 'Unknown';
         } catch (error) {
-            logError(error, `Failed to get director for movie ID ${movieId}`);
+            console.error(`Failed to get director for movie ID ${movieId}:`, error);
             return 'Unknown';
         }
     }

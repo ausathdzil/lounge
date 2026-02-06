@@ -233,7 +233,7 @@ export const SearchView = GObject.registerClass({
                 this._stack.set_visible_child_name('no-results');
             }
         } catch (error) {
-            logError(error, 'Failed to search movies');
+            console.error('Failed to search movies:', error);
 
             // Differentiate API key errors from network errors
             const msg = error.message || '';

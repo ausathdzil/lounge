@@ -88,7 +88,7 @@ export const LoungeApplication = GObject.registerClass(
             if (!active_window) {
                 // Initialize database on first activation
                 this.database.initialize().catch(error => {
-                    logError(error, 'Failed to initialize database');
+                    console.error('Failed to initialize database:', error);
                 });
 
                 // Load custom CSS on first activation

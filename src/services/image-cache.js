@@ -74,7 +74,7 @@ export class ImageCacheService {
                 const pixbuf = GdkPixbuf.Pixbuf.new_from_file(cachedPath);
                 return pixbuf;
             } catch (error) {
-                logError(error, `Failed to load cached poster for movie ${movieId}`);
+                console.error(`Failed to load cached poster for movie ${movieId}:`, error);
                 // Continue to download if cache read fails
             }
         }
@@ -91,7 +91,7 @@ export class ImageCacheService {
             log(`Downloaded and cached poster for movie ${movieId}`);
             return pixbuf;
         } catch (error) {
-            logError(error, `Failed to download poster for movie ${movieId}`);
+            console.error(`Failed to download poster for movie ${movieId}:`, error);
             return null;
         }
     }
@@ -110,7 +110,7 @@ export class ImageCacheService {
                 const pixbuf = GdkPixbuf.Pixbuf.new_from_file(cachedPath);
                 return pixbuf;
             } catch (error) {
-                logError(error, `Failed to load cached backdrop for movie ${movieId}`);
+                console.error(`Failed to load cached backdrop for movie ${movieId}:`, error);
                 // Continue to download if cache read fails
             }
         }
@@ -127,7 +127,7 @@ export class ImageCacheService {
             log(`Downloaded and cached backdrop for movie ${movieId}`);
             return pixbuf;
         } catch (error) {
-            logError(error, `Failed to download backdrop for movie ${movieId}`);
+            console.error(`Failed to download backdrop for movie ${movieId}:`, error);
             return null;
         }
     }
@@ -200,7 +200,7 @@ export class ImageCacheService {
                 child.delete(null);
             }
         } catch (error) {
-            logError(error, 'Failed to clear directory');
+            console.error('Failed to clear directory:', error);
         }
     }
 }

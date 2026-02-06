@@ -360,7 +360,7 @@ export const MovieDetailsDialog = GObject.registerClass({
                 tmdbService: this._tmdbService,
             });
         } catch (error) {
-            logError(error, `Failed to load poster for movie ${this._movie.id}`);
+            console.error(`Failed to load poster for movie ${this._movie.id}:`, error);
         }
     }
 

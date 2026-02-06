@@ -21,6 +21,7 @@
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
+import Pango from 'gi://Pango';
 
 export const LogEntryCard = GObject.registerClass({
     GTypeName: 'LogEntryCard',
@@ -98,7 +99,7 @@ export const LogEntryCard = GObject.registerClass({
             max_width_chars: 20,
             xalign: 0,
             lines: 2,
-            ellipsize: 3, // PANGO_ELLIPSIZE_END
+            ellipsize: Pango.EllipsizeMode.END,
             css_classes: ['title-4'],
         });
         infoBox.append(titleLabel);
@@ -109,7 +110,7 @@ export const LogEntryCard = GObject.registerClass({
                 ? `${this._logEntry.year} \u2022 ${this._formatDate(this._logEntry.watched_date)}`
                 : this._formatDate(this._logEntry.watched_date),
             xalign: 0,
-            ellipsize: 3,
+            ellipsize: Pango.EllipsizeMode.END,
             css_classes: ['caption', 'dim-label'],
         });
         infoBox.append(metaLabel);

@@ -20,7 +20,7 @@
 
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
-import Adw from 'gi://Adw';
+import Pango from 'gi://Pango';
 
 import { removeAllChildren, loadPosterIntoContainer } from '../utils/ui.js';
 

@@ -106,7 +106,18 @@ export const LogEntryDialog = GObject.registerClass({
         });
         box.append(movieLabel);
 
-        // --- Rating group ---
+        box.append(this._buildRatingGroup());
+        box.append(this._buildDetailsGroup());
+
+        clamp.set_child(box);
+        scrolled.set_child(clamp);
+        toolbarView.set_content(scrolled);
+        toolbarView.add_bottom_bar(this._buildButtonBar());
+
+        this.set_child(toolbarView);
+    }
+
+    _buildRatingGroup() {
         const ratingGroup = new Adw.PreferencesGroup();
 
         const ratingRow = new Adw.ActionRow({
@@ -124,9 +135,10 @@ export const LogEntryDialog = GObject.registerClass({
         ratingRow.add_suffix(this._ratingWidget);
         ratingGroup.add(ratingRow);
 
-        box.append(ratingGroup);
+        return ratingGroup;
+    }
 
-        // --- Date & Notes group ---
+    _buildDetailsGroup() {
         const detailsGroup = new Adw.PreferencesGroup();
 
         // Date row
@@ -156,13 +168,10 @@ export const LogEntryDialog = GObject.registerClass({
         });
         detailsGroup.add(this._notesRow);
 
-        box.append(detailsGroup);
+        return detailsGroup;
+    }
 
-        clamp.set_child(box);
-        scrolled.set_child(clamp);
-        toolbarView.set_content(scrolled);
-
-        // Button bar
+    _buildButtonBar() {
         const buttonBox = new Gtk.Box({
             spacing: 8,
             margin_top: 12,
@@ -199,9 +208,7 @@ export const LogEntryDialog = GObject.registerClass({
         this._saveButton.connect('clicked', () => this._saveLog());
         buttonBox.append(this._saveButton);
 
-        toolbarView.add_bottom_bar(buttonBox);
-
-        this.set_child(toolbarView);
+        return buttonBox;
     }
 
     _saveLog() {

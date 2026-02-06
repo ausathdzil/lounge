@@ -20,10 +20,9 @@
 
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
-import Gdk from 'gi://Gdk';
 import Adw from 'gi://Adw';
 import { LogEntryDialog } from './log-entry-dialog.js';
-import { removeAllChildren } from '../utils/ui.js';
+import { removeAllChildren, loadPosterIntoContainer } from '../utils/ui.js';
 
 export const MovieDetailsDialog = GObject.registerClass({
     GTypeName: 'MovieDetailsDialog',
@@ -342,44 +341,14 @@ export const MovieDetailsDialog = GObject.registerClass({
 
     async _loadPosterImage() {
         try {
-            const pixbuf = await this._imageCache.getPosterPixbuf(
-                this._movie.id,
-                this._movie.poster_path,
-                this._tmdbService,
-                'w342'
-            );
-
-            if (pixbuf) {
-                removeAllChildren(this._posterBox);
-
-                const targetHeight = 300;
-                const originalWidth = pixbuf.get_width();
-                const originalHeight = pixbuf.get_height();
-                const scale = targetHeight / originalHeight;
-                const scaledWidth = Math.round(originalWidth * scale);
-                const scaledHeight = Math.round(originalHeight * scale);
-
-                const scaledPixbuf = pixbuf.scale_simple(
-                    scaledWidth,
-                    scaledHeight,
-                    2 // GdkPixbuf.InterpType.BILINEAR
-                );
-
-                const texture = Gdk.Texture.new_for_pixbuf(scaledPixbuf);
-
-                const picture = new Gtk.Picture({
-                    paintable: texture,
-                    content_fit: Gtk.ContentFit.COVER,
-                    halign: Gtk.Align.FILL,
-                    valign: Gtk.Align.FILL,
-                    hexpand: true,
-                    vexpand: true,
-                    height_request: 300,
-                    alternative_text: `Poster for ${this._movie.title}`,
-                });
-
-                this._posterBox.append(picture);
-            }
+            await loadPosterIntoContainer({
+                container: this._posterBox,
+                movieId: this._movie.id,
+                posterPath: this._movie.poster_path,
+                title: this._movie.title,
+                imageCache: this._imageCache,
+                tmdbService: this._tmdbService,
+            });
         } catch (error) {
             logError(error, `Failed to load poster for movie ${this._movie.id}`);
         }

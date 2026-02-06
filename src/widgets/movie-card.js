@@ -20,10 +20,9 @@
 
 import GObject from 'gi://GObject';
 import Gtk from 'gi://Gtk';
-import Gdk from 'gi://Gdk';
 import Adw from 'gi://Adw';
 
-import { removeAllChildren } from '../utils/ui.js';
+import { removeAllChildren, loadPosterIntoContainer } from '../utils/ui.js';
 
 export const MovieCard = GObject.registerClass({
     GTypeName: 'MovieCard',
@@ -147,52 +146,14 @@ export const MovieCard = GObject.registerClass({
 
     async _loadPosterImage() {
         try {
-            const pixbuf = await this._imageCache.getPosterPixbuf(
-                this._movie.id,
-                this._movie.poster_path,
-                this._tmdbService,
-                'w342'
-            );
-
-            if (pixbuf) {
-                removeAllChildren(this._posterBox);
-
-                // Scale pixbuf to fit container while maintaining aspect ratio
-                const targetHeight = 300;
-                
-                const originalWidth = pixbuf.get_width();
-                const originalHeight = pixbuf.get_height();
-                
-                // Calculate scale based on height to cover the container
-                const scale = targetHeight / originalHeight;
-                
-                const scaledWidth = Math.round(originalWidth * scale);
-                const scaledHeight = Math.round(originalHeight * scale);
-                
-                // Scale the pixbuf
-                const scaledPixbuf = pixbuf.scale_simple(
-                    scaledWidth,
-                    scaledHeight,
-                    2 // GdkPixbuf.InterpType.BILINEAR
-                );
-
-                // Create texture from scaled pixbuf
-                const texture = Gdk.Texture.new_for_pixbuf(scaledPixbuf);
-
-                // Create picture widget
-                const picture = new Gtk.Picture({
-                    paintable: texture,
-                    content_fit: Gtk.ContentFit.COVER,
-                    halign: Gtk.Align.FILL,
-                    valign: Gtk.Align.FILL,
-                    hexpand: true,
-                    vexpand: true,
-                    height_request: 300,
-                    alternative_text: `Poster for ${this.title || 'Unknown'}`,
-                });
-
-                this._posterBox.append(picture);
-            }
+            await loadPosterIntoContainer({
+                container: this._posterBox,
+                movieId: this._movie.id,
+                posterPath: this._movie.poster_path,
+                title: this.title || 'Unknown',
+                imageCache: this._imageCache,
+                tmdbService: this._tmdbService,
+            });
         } catch (error) {
             logError(error, `Failed to load poster for movie ${this._movie.id}`);
             // Keep placeholder on error

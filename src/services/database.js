@@ -21,6 +21,25 @@
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 
+const LOG_ENTRY_SELECT = `
+    SELECT
+        ml.id as log_id,
+        ml.movie_id,
+        ml.user_rating,
+        ml.watched_date,
+        ml.notes,
+        ml.created_at,
+        m.title,
+        m.year,
+        m.poster_path,
+        m.overview,
+        m.runtime,
+        m.genres,
+        m.director,
+        m.tmdb_rating
+    FROM movie_logs ml
+    JOIN movies m ON ml.movie_id = m.id`;
+
 export class DatabaseService {
     constructor() {
         // Database path: ~/.local/share/lounge/lounge.db
@@ -305,25 +324,7 @@ export class DatabaseService {
             await this.initialize();
         }
 
-        let sql = `
-            SELECT 
-                ml.id as log_id,
-                ml.movie_id,
-                ml.user_rating,
-                ml.watched_date,
-                ml.notes,
-                ml.created_at,
-                m.title,
-                m.year,
-                m.poster_path,
-                m.overview,
-                m.runtime,
-                m.genres,
-                m.director,
-                m.tmdb_rating
-            FROM movie_logs ml
-            JOIN movies m ON ml.movie_id = m.id
-        `;
+        let sql = LOG_ENTRY_SELECT;
 
         const conditions = [];
         
@@ -361,24 +362,7 @@ export class DatabaseService {
             await this.initialize();
         }
 
-        const sql = `
-            SELECT 
-                ml.id as log_id,
-                ml.movie_id,
-                ml.user_rating,
-                ml.watched_date,
-                ml.notes,
-                ml.created_at,
-                m.title,
-                m.year,
-                m.poster_path,
-                m.overview,
-                m.runtime,
-                m.genres,
-                m.director,
-                m.tmdb_rating
-            FROM movie_logs ml
-            JOIN movies m ON ml.movie_id = m.id
+        const sql = `${LOG_ENTRY_SELECT}
             WHERE ml.movie_id = ${movieId}
             LIMIT 1;
         `;

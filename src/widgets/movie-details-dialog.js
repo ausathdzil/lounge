@@ -29,7 +29,7 @@ export const MovieDetailsDialog = GObject.registerClass({
         'log-changed': {},
     },
 }, class MovieDetailsDialog extends Adw.Dialog {
-    constructor(movie, database) {
+    constructor(movie, database, tmdbService = null) {
         super({
             title: movie.title,
             content_width: 600,
@@ -53,10 +53,11 @@ export const MovieDetailsDialog = GObject.registerClass({
         };
         
         this._database = database;
+        this._tmdbService = tmdbService;
         this._logEntry = null;
         
         this._buildUI();
-        this._loadLogEntry();
+        this._loadData();
     }
 
     _buildUI() {
@@ -67,12 +68,66 @@ export const MovieDetailsDialog = GObject.registerClass({
         });
         toolbarView.add_top_bar(headerBar);
 
+        // Stack for loading/content/error states
+        this._stack = new Gtk.Stack({
+            vexpand: true,
+            transition_type: Gtk.StackTransitionType.CROSSFADE,
+        });
+
+        // Loading state
+        const loadingBox = new Gtk.Box({
+            orientation: Gtk.Orientation.VERTICAL,
+            halign: Gtk.Align.CENTER,
+            valign: Gtk.Align.CENTER,
+            spacing: 12,
+        });
+        const spinner = new Gtk.Spinner({
+            spinning: true,
+            width_request: 32,
+            height_request: 32,
+        });
+        const loadingLabel = new Gtk.Label({
+            label: _('Loading details...'),
+            css_classes: ['title-3'],
+        });
+        loadingBox.append(spinner);
+        loadingBox.append(loadingLabel);
+        this._stack.add_named(loadingBox, 'loading');
+
+        // Error state
+        this._errorState = new Adw.StatusPage({
+            icon_name: 'network-error-symbolic',
+            title: _('Failed to Load Details'),
+            description: _('Check your internet connection and try again'),
+        });
+        const retryButton = new Gtk.Button({
+            label: _('Retry'),
+            halign: Gtk.Align.CENTER,
+            css_classes: ['suggested-action', 'pill'],
+        });
+        retryButton.connect('clicked', () => this._loadData());
+        this._errorState.set_child(retryButton);
+        this._stack.add_named(this._errorState, 'error');
+
+        // Content
+        this._contentBox = this._buildContent();
+        this._stack.add_named(this._contentBox, 'content');
+
+        toolbarView.set_content(this._stack);
+        this.set_child(toolbarView);
+
+        // Show loading if we need to fetch details, otherwise show content directly
+        const needsFetch = !this._movie.runtime && !this._movie.genres && !this._movie.director;
+        this._stack.set_visible_child_name(needsFetch ? 'loading' : 'content');
+    }
+
+    _buildContent() {
         const scrolled = new Gtk.ScrolledWindow({
             hscrollbar_policy: Gtk.PolicyType.NEVER,
             vexpand: true,
         });
 
-        const box = new Gtk.Box({
+        this._contentMainBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
             spacing: 18,
             margin_start: 24,
@@ -156,36 +211,29 @@ export const MovieDetailsDialog = GObject.registerClass({
         infoBox.append(ratingBox);
 
         // Runtime and genres
-        const metaParts = [];
-        if (this._movie.runtime) {
-            metaParts.push(this._formatRuntime(this._movie.runtime));
-        }
-        if (this._movie.genres) {
-            metaParts.push(this._movie.genres);
-        }
-        
-        if (metaParts.length > 0) {
-            const metaLabel = new Gtk.Label({
-                label: metaParts.join(' • '),
-                wrap: true,
-                xalign: 0,
-                css_classes: ['dim-label'],
-            });
-            infoBox.append(metaLabel);
-        }
+        this._metaLabel = new Gtk.Label({
+            label: '',
+            wrap: true,
+            xalign: 0,
+            css_classes: ['dim-label'],
+            visible: false,
+        });
+        infoBox.append(this._metaLabel);
 
         // Director
-        if (this._movie.director) {
-            const directorLabel = new Gtk.Label({
-                label: `Director: ${this._movie.director}`,
-                wrap: true,
-                xalign: 0,
-            });
-            infoBox.append(directorLabel);
-        }
+        this._directorLabel = new Gtk.Label({
+            label: '',
+            wrap: true,
+            xalign: 0,
+            visible: false,
+        });
+        infoBox.append(this._directorLabel);
+
+        // Update meta fields if data is already available
+        this._updateMetaFields();
 
         headerBox.append(infoBox);
-        box.append(headerBox);
+        this._contentMainBox.append(headerBox);
 
         // Overview section
         const overviewHeading = new Gtk.Label({
@@ -193,15 +241,15 @@ export const MovieDetailsDialog = GObject.registerClass({
             xalign: 0,
             css_classes: ['title-4'],
         });
-        box.append(overviewHeading);
+        this._contentMainBox.append(overviewHeading);
 
-        const overviewLabel = new Gtk.Label({
-            label: this._movie.overview || 'No overview available',
+        this._overviewLabel = new Gtk.Label({
+            label: this._movie.overview || _('No overview available'),
             wrap: true,
             xalign: 0,
             selectable: true,
         });
-        box.append(overviewLabel);
+        this._contentMainBox.append(this._overviewLabel);
 
         // Log status section
         this._logStatusBox = new Gtk.Box({
@@ -224,14 +272,62 @@ export const MovieDetailsDialog = GObject.registerClass({
         this._logButton.connect('clicked', () => this._openLogDialog());
         this._logStatusBox.append(this._logButton);
         
-        box.append(this._logStatusBox);
+        this._contentMainBox.append(this._logStatusBox);
 
-        scrolled.set_child(box);
-        toolbarView.set_content(scrolled);
-        this.set_child(toolbarView);
+        scrolled.set_child(this._contentMainBox);
+        return scrolled;
     }
 
-    async _loadLogEntry() {
+    _updateMetaFields() {
+        const metaParts = [];
+        if (this._movie.runtime) {
+            metaParts.push(this._formatRuntime(this._movie.runtime));
+        }
+        if (this._movie.genres) {
+            metaParts.push(this._movie.genres);
+        }
+        
+        if (metaParts.length > 0) {
+            this._metaLabel.label = metaParts.join(' \u2022 ');
+            this._metaLabel.visible = true;
+        }
+
+        if (this._movie.director) {
+            this._directorLabel.label = `Director: ${this._movie.director}`;
+            this._directorLabel.visible = true;
+        }
+
+        if (this._movie.overview && this._overviewLabel) {
+            this._overviewLabel.label = this._movie.overview;
+        }
+    }
+
+    async _loadData() {
+        // Fetch full details from TMDB if missing
+        const needsFetch = !this._movie.runtime && !this._movie.genres && !this._movie.director;
+
+        if (needsFetch && this._tmdbService) {
+            this._stack.set_visible_child_name('loading');
+            try {
+                const details = await this._tmdbService.getMovieDetails(this._movie.id);
+                // Merge fetched details into movie object
+                this._movie.runtime = details.runtime || this._movie.runtime;
+                this._movie.genres = details.genres || this._movie.genres;
+                this._movie.director = details.director || this._movie.director;
+                this._movie.overview = details.overview || this._movie.overview;
+                this._movie.tmdb_rating = details.tmdb_rating || this._movie.tmdb_rating;
+                
+                this._updateMetaFields();
+                this._stack.set_visible_child_name('content');
+            } catch (error) {
+                console.error('Failed to fetch movie details:', error);
+                this._errorState.set_description(error.message || _('Could not load movie details'));
+                this._stack.set_visible_child_name('error');
+                return;
+            }
+        }
+
+        // Load log entry from database
         try {
             this._logEntry = await this._database.getLogEntry(this._movie.id);
             this._updateLogStatus();
@@ -274,7 +370,7 @@ export const MovieDetailsDialog = GObject.registerClass({
                 );
                 
                 // Reload log entry
-                await this._loadLogEntry();
+                await this._loadData();
                 
                 // Emit signal to refresh log view
                 this.emit('log-changed');

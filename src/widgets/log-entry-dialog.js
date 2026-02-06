@@ -207,26 +207,26 @@ export const LogEntryDialog = GObject.registerClass({
         });
 
         if (this._existingLog) {
-            const deleteButton = new Gtk.Button({
+            this._deleteButton = new Gtk.Button({
                 label: 'Delete',
                 css_classes: ['destructive-action'],
             });
-            deleteButton.connect('clicked', () => this._showDeleteConfirmation());
-            buttonBox.append(deleteButton);
+            this._deleteButton.connect('clicked', () => this._showDeleteConfirmation());
+            buttonBox.append(this._deleteButton);
         }
 
-        const cancelButton = new Gtk.Button({
+        this._cancelButton = new Gtk.Button({
             label: 'Cancel',
         });
-        cancelButton.connect('clicked', () => this.close());
-        buttonBox.append(cancelButton);
+        this._cancelButton.connect('clicked', () => this.close());
+        buttonBox.append(this._cancelButton);
 
-        const saveButton = new Gtk.Button({
+        this._saveButton = new Gtk.Button({
             label: 'Save',
             css_classes: ['suggested-action'],
         });
-        saveButton.connect('clicked', () => this._saveLog());
-        buttonBox.append(saveButton);
+        this._saveButton.connect('clicked', () => this._saveLog());
+        buttonBox.append(this._saveButton);
 
         toolbarView.add_bottom_bar(buttonBox);
 
@@ -283,6 +283,12 @@ export const LogEntryDialog = GObject.registerClass({
             this._showError('Watched date cannot be in the future');
             return;
         }
+
+        // Disable buttons to prevent double-clicks
+        this._saveButton.sensitive = false;
+        this._cancelButton.sensitive = false;
+        if (this._deleteButton) this._deleteButton.sensitive = false;
+        this._saveButton.label = _('Saving...');
 
         // Emit saved signal with data
         this.emit('saved', {

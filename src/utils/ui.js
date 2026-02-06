@@ -22,6 +22,8 @@ import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
 import GdkPixbuf from 'gi://GdkPixbuf';
 
+import { POSTER_HEIGHT, TMDB_POSTER_SIZE } from './constants.js';
+
 /**
  * Removes all children from a GTK container widget.
  *
@@ -58,8 +60,8 @@ export async function loadPosterIntoContainer({
     title,
     imageCache,
     tmdbService,
-    targetHeight = 300,
-    posterSize = 'w342',
+    targetHeight = POSTER_HEIGHT,
+    posterSize = TMDB_POSTER_SIZE,
 }) {
     const pixbuf = await imageCache.getPosterPixbuf(
         movieId,

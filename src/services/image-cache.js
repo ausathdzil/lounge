@@ -23,6 +23,8 @@ import Gio from 'gi://Gio';
 import Soup from 'gi://Soup?version=3.0';
 import GdkPixbuf from 'gi://GdkPixbuf';
 
+import { TMDB_POSTER_SIZE, TMDB_BACKDROP_SIZE } from '../utils/constants.js';
+
 export class ImageCacheService {
     constructor() {
         // Cache directory: ~/.cache/lounge/
@@ -60,7 +62,7 @@ export class ImageCacheService {
         }
     }
 
-    async getPosterPixbuf(movieId, posterPath, tmdbService, size = 'w342') {
+    async getPosterPixbuf(movieId, posterPath, tmdbService, size = TMDB_POSTER_SIZE) {
         if (!posterPath) {
             return null;
         }
@@ -96,7 +98,7 @@ export class ImageCacheService {
         }
     }
 
-    async getBackdropPixbuf(movieId, backdropPath, tmdbService, size = 'w780') {
+    async getBackdropPixbuf(movieId, backdropPath, tmdbService, size = TMDB_BACKDROP_SIZE) {
         if (!backdropPath) {
             return null;
         }

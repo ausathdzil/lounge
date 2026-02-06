@@ -23,6 +23,8 @@ import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
 import Pango from 'gi://Pango';
 
+import { CARD_WIDTH, POSTER_HEIGHT, MAX_RATING, TMDB_POSTER_SIZE } from '../utils/constants.js';
+
 export const LogEntryCard = GObject.registerClass({
     GTypeName: 'LogEntryCard',
 }, class LogEntryCard extends Gtk.Box {
@@ -30,7 +32,7 @@ export const LogEntryCard = GObject.registerClass({
         super({
             orientation: Gtk.Orientation.VERTICAL,
             css_classes: ['card'],
-            width_request: 150,
+            width_request: CARD_WIDTH,
             overflow: Gtk.Overflow.HIDDEN,
         });
 
@@ -48,7 +50,7 @@ export const LogEntryCard = GObject.registerClass({
         // Poster box for sizing
         const posterBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
-            height_request: 300,
+            height_request: POSTER_HEIGHT,
             css_classes: ['poster-placeholder'],
         });
         
@@ -76,7 +78,7 @@ export const LogEntryCard = GObject.registerClass({
             margin_start: 8,
             margin_top: 8,
             css_classes: ['accent', 'badge'],
-            tooltip_text: `Your rating: ${this._logEntry.user_rating}/5`,
+            tooltip_text: `Your rating: ${this._logEntry.user_rating}/${MAX_RATING}`,
         });
 
         overlay.add_overlay(ratingBadge);
@@ -123,7 +125,7 @@ export const LogEntryCard = GObject.registerClass({
                 this._logEntry.movie_id,
                 this._logEntry.poster_path,
                 this._tmdbService,
-                'w342'
+                TMDB_POSTER_SIZE
             );
             
             if (pixbuf) {
@@ -136,7 +138,7 @@ export const LogEntryCard = GObject.registerClass({
     }
 
     _formatRating(rating) {
-        return `${Math.round(rating)}/5`;
+        return `${Math.round(rating)}/${MAX_RATING}`;
     }
 
     _formatDate(dateString) {

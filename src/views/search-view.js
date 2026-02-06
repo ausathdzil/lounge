@@ -26,6 +26,8 @@ import GLib from 'gi://GLib';
 import { MovieCard } from '../widgets/movie-card.js';
 import { removeAllChildren } from '../utils/ui.js';
 
+const SEARCH_DEBOUNCE_MS = 500;
+
 export const SearchView = GObject.registerClass({
     GTypeName: 'SearchView',
 }, class SearchView extends Gtk.Box {
@@ -53,7 +55,7 @@ export const SearchView = GObject.registerClass({
                 GLib.source_remove(this._searchTimeout);
             }
 
-            this._searchTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 500, () => {
+            this._searchTimeout = GLib.timeout_add(GLib.PRIORITY_DEFAULT, SEARCH_DEBOUNCE_MS, () => {
                 this._onSearchChanged();
                 this._searchTimeout = null;
                 return GLib.SOURCE_REMOVE;

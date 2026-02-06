@@ -23,6 +23,7 @@ import Gtk from 'gi://Gtk';
 import Pango from 'gi://Pango';
 
 import { removeAllChildren, loadPosterIntoContainer } from '../utils/ui.js';
+import { CARD_WIDTH, POSTER_HEIGHT, POSTER_PLACEHOLDER_ICON_SIZE } from '../utils/constants.js';
 
 export const MovieCard = GObject.registerClass({
     GTypeName: 'MovieCard',
@@ -55,7 +56,7 @@ export const MovieCard = GObject.registerClass({
             orientation: Gtk.Orientation.VERTICAL,
             spacing: 0,
             css_classes: ['card'],
-            width_request: 150,
+            width_request: CARD_WIDTH,
             overflow: Gtk.Overflow.HIDDEN,
         });
 
@@ -79,7 +80,7 @@ export const MovieCard = GObject.registerClass({
             halign: Gtk.Align.FILL,
             hexpand: true,
             vexpand: false,
-            height_request: 300,
+            height_request: POSTER_HEIGHT,
             css_classes: ['poster-placeholder'],
         });
 
@@ -133,7 +134,7 @@ export const MovieCard = GObject.registerClass({
 
         const icon = new Gtk.Image({
             icon_name: 'video-x-generic-symbolic',
-            pixel_size: 64,
+            pixel_size: POSTER_PLACEHOLDER_ICON_SIZE,
             opacity: 0.5,
             halign: Gtk.Align.CENTER,
             valign: Gtk.Align.CENTER,

@@ -21,6 +21,8 @@
 import Soup from 'gi://Soup?version=3.0';
 import GLib from 'gi://GLib';
 
+import { TMDB_POSTER_SIZE, TMDB_BACKDROP_SIZE } from '../utils/constants.js';
+
 export class TMDBService {
     constructor(apiKey) {
         this._apiKey = apiKey;
@@ -163,12 +165,12 @@ export class TMDBService {
         });
     }
 
-    getPosterUrl(posterPath, size = 'w342') {
+    getPosterUrl(posterPath, size = TMDB_POSTER_SIZE) {
         if (!posterPath) return null;
         return `${this._imageBaseUrl}${size}${posterPath}`;
     }
 
-    getBackdropUrl(backdropPath, size = 'w780') {
+    getBackdropUrl(backdropPath, size = TMDB_BACKDROP_SIZE) {
         if (!backdropPath) return null;
         return `${this._imageBaseUrl}${size}${backdropPath}`;
     }

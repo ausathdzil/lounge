@@ -11,6 +11,9 @@ import Gdk from 'gi://Gdk';
 import Adw from 'gi://Adw';
 
 import { RatingWidget } from './rating-widget.js';
+import { MAX_RATING } from '../utils/constants.js';
+
+const ERROR_BANNER_AUTO_HIDE_MS = 5000;
 
 export const LogEntryDialog = GObject.registerClass({
     GTypeName: 'LogEntryDialog',
@@ -217,8 +220,8 @@ export const LogEntryDialog = GObject.registerClass({
         const notes = this._notesRow.text.trim();
 
         // Validate rating
-        if (rating < 1 || rating > 5) {
-            this._showError(_('Please select a rating (1-5 stars)'));
+        if (rating < 1 || rating > MAX_RATING) {
+            this._showError(_(`Please select a rating (1-${MAX_RATING} stars)`));
             return;
         }
 
@@ -312,7 +315,7 @@ export const LogEntryDialog = GObject.registerClass({
         }
         this._errorTimeout = setTimeout(() => {
             this._errorBanner.revealed = false;
-        }, 5000);
+        }, ERROR_BANNER_AUTO_HIDE_MS);
     }
 
     _clearError() {

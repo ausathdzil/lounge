@@ -23,6 +23,7 @@ import Gtk from 'gi://Gtk';
 import Adw from 'gi://Adw';
 import { LogEntryDialog } from './log-entry-dialog.js';
 import { removeAllChildren, loadPosterIntoContainer } from '../utils/ui.js';
+import { POSTER_HEIGHT, POSTER_PLACEHOLDER_ICON_SIZE, MAX_RATING } from '../utils/constants.js';
 
 export const MovieDetailsDialog = GObject.registerClass({
     GTypeName: 'MovieDetailsDialog',
@@ -158,7 +159,7 @@ export const MovieDetailsDialog = GObject.registerClass({
             orientation: Gtk.Orientation.VERTICAL,
             halign: Gtk.Align.CENTER,
             width_request: 200,
-            height_request: 300,
+            height_request: POSTER_HEIGHT,
             overflow: Gtk.Overflow.HIDDEN,
             css_classes: ['card'],
         });
@@ -173,7 +174,7 @@ export const MovieDetailsDialog = GObject.registerClass({
         });
         const posterIcon = new Gtk.Image({
             icon_name: 'video-x-generic-symbolic',
-            pixel_size: 64,
+            pixel_size: POSTER_PLACEHOLDER_ICON_SIZE,
             opacity: 0.5,
             halign: Gtk.Align.CENTER,
             valign: Gtk.Align.CENTER,
@@ -400,7 +401,7 @@ export const MovieDetailsDialog = GObject.registerClass({
 
     _updateLogStatus() {
         if (this._logEntry) {
-            this._logButtonContent.label = `${this._logEntry.user_rating}/5 \u2022 ${this._logEntry.watched_date}`;
+            this._logButtonContent.label = `${this._logEntry.user_rating}/${MAX_RATING} \u2022 ${this._logEntry.watched_date}`;
             this._logButtonContent.icon_name = 'document-edit-symbolic';
             this._logButton.css_classes = ['pill'];
             this._logButton.tooltip_text = _('Edit your log entry');

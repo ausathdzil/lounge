@@ -3,10 +3,6 @@
     "runtime" : "org.gnome.Platform",
     "runtime-version" : "48",
     "sdk" : "org.gnome.Sdk",
-    "sdk-extensions" : [
-        "org.freedesktop.Sdk.Extension.node20",
-        "org.freedesktop.Sdk.Extension.typescript"
-    ],
     "command" : "io.github.ausathdzil.lounge",
     "finish-args" : [
         "--share=network",
@@ -15,9 +11,6 @@
         "--device=dri",
         "--socket=wayland"
     ],
-    "build-options" : {
-        "append-path" : "/usr/lib/sdk/typescript/bin:/usr/lib/sdk/node20/bin"
-    },
     "cleanup" : [
         "/include",
         "/lib/pkgconfig",
@@ -37,7 +30,8 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "url" : "file:///home/ausath/Projects/lounge"
+                    "url" : "file:///home/ausath/Projects/lounge",
+                    "branch" : "main"
                 }
             ]
         }

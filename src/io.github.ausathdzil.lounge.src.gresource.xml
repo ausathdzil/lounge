@@ -5,8 +5,7 @@
     <file>window.js</file>
     <file>views/search-view.js</file>
     <file>views/log-view.js</file>
-    <file>views/watchlist-view.js</file>
-    <file>views/collections-view.js</file>
+
     <file>widgets/movie-card.js</file>
     <file>widgets/movie-details-dialog.js</file>
     <file>widgets/preferences-dialog.js</file>

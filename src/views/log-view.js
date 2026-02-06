@@ -43,6 +43,9 @@ export const LogView = GObject.registerClass({
         // Callback for when a log entry is clicked
         this.logEntrySelectedCallback = null;
 
+        // Callback for navigating to search view
+        this.navigateToSearchCallback = null;
+
         this._buildUI();
     }
 
@@ -94,6 +97,18 @@ export const LogView = GObject.registerClass({
             vexpand: true,
             hexpand: true,
         });
+
+        const searchButton = new Gtk.Button({
+            label: _('Search Movies'),
+            halign: Gtk.Align.CENTER,
+            css_classes: ['suggested-action', 'pill'],
+        });
+        searchButton.connect('clicked', () => {
+            if (this.navigateToSearchCallback) {
+                this.navigateToSearchCallback();
+            }
+        });
+        this._emptyState.set_child(searchButton);
         this._stack.add_named(this._emptyState, 'empty');
 
         // Results view

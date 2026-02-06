@@ -58,20 +58,7 @@
                         <property name="activatable">true</property>
                       </object>
                     </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="title" translatable="yes">Watchlist</property>
-                        <property name="icon-name">view-pin-symbolic</property>
-                        <property name="activatable">true</property>
-                      </object>
-                    </child>
-                    <child>
-                      <object class="AdwActionRow">
-                        <property name="title" translatable="yes">Collections</property>
-                        <property name="icon-name">view-grid-symbolic</property>
-                        <property name="activatable">true</property>
-                      </object>
-                    </child>
+
                   </object>
                 </child>
               </object>

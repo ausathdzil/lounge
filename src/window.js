@@ -25,8 +25,7 @@ import Gio from 'gi://Gio';
 
 import { SearchView } from './views/search-view.js';
 import { LogView } from './views/log-view.js';
-import { WatchlistView } from './views/watchlist-view.js';
-import { CollectionsView } from './views/collections-view.js';
+
 import { MovieDetailsDialog } from './widgets/movie-details-dialog.js';
 import { TMDBService } from './services/tmdb.js';
 
@@ -48,14 +47,19 @@ export const LoungeWindow = GObject.registerClass({
         const apiKey = this._settings.get_string('tmdb-api-key');
         this._tmdbService = new TMDBService(apiKey);
 
+        // Update TMDB service when API key changes in settings
+        this._settings.connect('changed::tmdb-api-key', () => {
+            const newKey = this._settings.get_string('tmdb-api-key');
+            this._tmdbService.setApiKey(newKey);
+        });
+
         // Restore window state
         this._restoreWindowState();
 
         // Create views
         this._searchView = new SearchView(application.imageCache, this._tmdbService);
         this._logView = new LogView(application.database, application.imageCache, this._tmdbService);
-        this._watchlistView = new WatchlistView();
-        this._collectionsView = new CollectionsView();
+
 
         // Connect search view movie selection
         this._searchView.movieSelectedCallback = (movie) => {
@@ -67,11 +71,17 @@ export const LoungeWindow = GObject.registerClass({
             this._showMovieDetails(logEntry);
         };
 
+        // Connect log view "Search Movies" CTA
+        this._logView.navigateToSearchCallback = () => {
+            this._content_stack.set_visible_child_name('search');
+            this._view_title.set_label('Search');
+            this._sidebar_list.select_row(this._sidebar_list.get_row_at_index(0));
+        };
+
         // Add views to stack
         this._content_stack.add_named(this._searchView, 'search');
         this._content_stack.add_named(this._logView, 'log');
-        this._content_stack.add_named(this._watchlistView, 'watchlist');
-        this._content_stack.add_named(this._collectionsView, 'collections');
+
 
         // Set initial view
         this._content_stack.set_visible_child_name('search');
@@ -79,8 +89,8 @@ export const LoungeWindow = GObject.registerClass({
         // Connect sidebar navigation
         this._sidebar_list.connect('row-activated', (listbox, row) => {
             const index = row.get_index();
-            const views = ['search', 'log', 'watchlist', 'collections'];
-            const titles = ['Search', 'Log', 'Watchlist', 'Collections'];
+            const views = ['search', 'log'];
+            const titles = ['Search', 'Log'];
             if (index >= 0 && index < views.length) {
                 this._content_stack.set_visible_child_name(views[index]);
                 this._view_title.set_label(titles[index]);

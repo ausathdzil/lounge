@@ -80,7 +80,7 @@ export const SearchView = GObject.registerClass({
         this._emptyState = new Adw.StatusPage({
             icon_name: 'system-search-symbolic',
             title: _('Search for Movies'),
-            description: _('Find movies from TMDB'),
+            description: _('Type a movie title above to search TMDB'),
             vexpand: true,
             hexpand: true,
         });
@@ -115,23 +115,68 @@ export const SearchView = GObject.registerClass({
         this._noResultsState = new Adw.StatusPage({
             icon_name: 'edit-find-symbolic',
             title: _('No Results Found'),
-            description: _('Try a different search term'),
+            description: _('Try different keywords or check the spelling'),
             vexpand: true,
             hexpand: true,
         });
 
         this._stack.add_named(this._noResultsState, 'no-results');
 
-        // Error state
+        // Error state (network/general errors)
         this._errorState = new Adw.StatusPage({
-            icon_name: 'dialog-error-symbolic',
+            icon_name: 'network-error-symbolic',
             title: _('Search Failed'),
-            description: _('Check your API key and internet connection'),
+            description: _('Check your internet connection and try again'),
             vexpand: true,
             hexpand: true,
         });
 
+        const retryButton = new Gtk.Button({
+            label: _('Retry'),
+            halign: Gtk.Align.CENTER,
+            css_classes: ['suggested-action', 'pill'],
+        });
+        retryButton.connect('clicked', () => {
+            this._onSearchChanged();
+        });
+        this._errorState.set_child(retryButton);
+
         this._stack.add_named(this._errorState, 'error');
+
+        // API key missing/invalid state
+        this._apiKeyState = new Adw.StatusPage({
+            icon_name: 'dialog-password-symbolic',
+            title: _('API Key Required'),
+            description: _('Add your TMDB API key in Preferences to search for movies'),
+            vexpand: true,
+            hexpand: true,
+        });
+
+        const apiKeyButtonBox = new Gtk.Box({
+            orientation: Gtk.Orientation.HORIZONTAL,
+            halign: Gtk.Align.CENTER,
+            spacing: 12,
+        });
+
+        const prefsButton = new Gtk.Button({
+            label: _('Open Preferences'),
+            css_classes: ['suggested-action', 'pill'],
+            action_name: 'app.preferences',
+        });
+
+        const apiKeyRetryButton = new Gtk.Button({
+            label: _('Retry'),
+            css_classes: ['pill'],
+        });
+        apiKeyRetryButton.connect('clicked', () => {
+            this._onSearchChanged();
+        });
+
+        apiKeyButtonBox.append(prefsButton);
+        apiKeyButtonBox.append(apiKeyRetryButton);
+        this._apiKeyState.set_child(apiKeyButtonBox);
+
+        this._stack.add_named(this._apiKeyState, 'api-key');
 
         // Results view
         const scrolled = new Gtk.ScrolledWindow({
@@ -177,8 +222,7 @@ export const SearchView = GObject.registerClass({
         }
 
         if (!this._tmdbService) {
-            this._errorState.set_description(_('TMDB service not available'));
-            this._stack.set_visible_child_name('error');
+            this._stack.set_visible_child_name('api-key');
             return;
         }
 
@@ -195,8 +239,20 @@ export const SearchView = GObject.registerClass({
             }
         } catch (error) {
             logError(error, 'Failed to search movies');
-            this._errorState.set_description(error.message || _('An error occurred while searching'));
-            this._stack.set_visible_child_name('error');
+
+            // Differentiate API key errors from network errors
+            const msg = error.message || '';
+            if (msg.includes('API key not set') || msg.includes('401')) {
+                this._apiKeyState.set_description(
+                    msg.includes('401')
+                        ? _('Your TMDB API key appears to be invalid')
+                        : _('Add your TMDB API key in Preferences to search for movies')
+                );
+                this._stack.set_visible_child_name('api-key');
+            } else {
+                this._errorState.set_description(msg || _('An error occurred while searching'));
+                this._stack.set_visible_child_name('error');
+            }
         }
     }
 

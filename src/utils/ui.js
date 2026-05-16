@@ -20,9 +20,8 @@
 
 import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
-import GdkPixbuf from 'gi://GdkPixbuf';
 
-import { POSTER_HEIGHT, TMDB_POSTER_SIZE } from './constants.js';
+import { POSTER_HEIGHT_CARD, POSTER_ASPECT_RATIO, TMDB_POSTER_SIZE } from './constants.js';
 
 /**
  * Removes all children from a GTK container widget.
@@ -60,33 +59,24 @@ export async function loadPosterIntoContainer({
     title,
     imageCache,
     tmdbService,
-    targetHeight = POSTER_HEIGHT,
+    targetHeight = POSTER_HEIGHT_CARD,
     posterSize = TMDB_POSTER_SIZE,
 }) {
-    const pixbuf = await imageCache.getPosterPixbuf(
+    const texture = await imageCache.getPosterPixbuf(
         movieId,
         posterPath,
         tmdbService,
         posterSize,
     );
 
-    if (!pixbuf) return;
+    if (!texture) return;
 
     removeAllChildren(container);
 
-    const originalWidth = pixbuf.get_width();
-    const originalHeight = pixbuf.get_height();
-    const scale = targetHeight / originalHeight;
-    const scaledWidth = Math.round(originalWidth * scale);
-    const scaledHeight = Math.round(originalHeight * scale);
+    const targetWidth = Math.round(targetHeight * POSTER_ASPECT_RATIO);
 
-    const scaledPixbuf = pixbuf.scale_simple(
-        scaledWidth,
-        scaledHeight,
-        GdkPixbuf.InterpType.BILINEAR,
-    );
-
-    const texture = Gdk.Texture.new_for_pixbuf(scaledPixbuf);
+    container.height_request = targetHeight;
+    container.width_request = targetWidth;
 
     const picture = new Gtk.Picture({
         paintable: texture,
@@ -95,6 +85,8 @@ export async function loadPosterIntoContainer({
         valign: Gtk.Align.FILL,
         hexpand: true,
         vexpand: true,
+        can_shrink: false,
+        width_request: targetWidth,
         height_request: targetHeight,
         alternative_text: `Poster for ${title}`,
     });

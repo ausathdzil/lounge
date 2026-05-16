@@ -23,7 +23,7 @@ import Gtk from 'gi://Gtk';
 import Pango from 'gi://Pango';
 
 import { removeAllChildren, loadPosterIntoContainer } from '../utils/ui.js';
-import { CARD_WIDTH, POSTER_HEIGHT, POSTER_PLACEHOLDER_ICON_SIZE } from '../utils/constants.js';
+import { CARD_WIDTH, POSTER_HEIGHT_CARD, POSTER_PLACEHOLDER_ICON_SIZE, POSTER_ASPECT_RATIO } from '../utils/constants.js';
 
 export const MovieCard = GObject.registerClass({
     GTypeName: 'MovieCard',
@@ -80,7 +80,8 @@ export const MovieCard = GObject.registerClass({
             halign: Gtk.Align.FILL,
             hexpand: true,
             vexpand: false,
-            height_request: POSTER_HEIGHT,
+            height_request: POSTER_HEIGHT_CARD,
+            width_request: Math.round(POSTER_HEIGHT_CARD * POSTER_ASPECT_RATIO),
             css_classes: ['poster-placeholder'],
         });
 

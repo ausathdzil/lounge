@@ -23,7 +23,7 @@ import Gtk from 'gi://Gtk';
 import Gdk from 'gi://Gdk';
 import Pango from 'gi://Pango';
 
-import { CARD_WIDTH, POSTER_HEIGHT, MAX_RATING, TMDB_POSTER_SIZE } from '../utils/constants.js';
+import { CARD_WIDTH, POSTER_HEIGHT_LOG, POSTER_HEIGHT_DIALOG, MAX_RATING, TMDB_POSTER_SIZE, POSTER_ASPECT_RATIO } from '../utils/constants.js';
 
 export const LogEntryCard = GObject.registerClass({
     GTypeName: 'LogEntryCard',
@@ -50,7 +50,8 @@ export const LogEntryCard = GObject.registerClass({
         // Poster box for sizing
         const posterBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
-            height_request: POSTER_HEIGHT,
+            height_request: POSTER_HEIGHT_LOG,
+            width_request: Math.round(POSTER_HEIGHT_LOG * POSTER_ASPECT_RATIO),
             css_classes: ['poster-placeholder'],
         });
         
@@ -60,6 +61,7 @@ export const LogEntryCard = GObject.registerClass({
             content_fit: Gtk.ContentFit.COVER,
             vexpand: true,
             hexpand: true,
+            height_request: POSTER_HEIGHT_LOG,
             alternative_text: `Poster for ${this._logEntry.title}`,
         });
 
@@ -121,15 +123,14 @@ export const LogEntryCard = GObject.registerClass({
 
     async _loadPoster() {
         try {
-            const pixbuf = await this._imageCache.getPosterPixbuf(
+            const texture = await this._imageCache.getPosterPixbuf(
                 this._logEntry.movie_id,
                 this._logEntry.poster_path,
                 this._tmdbService,
                 TMDB_POSTER_SIZE
             );
             
-            if (pixbuf) {
-                const texture = Gdk.Texture.new_for_pixbuf(pixbuf);
+            if (texture) {
                 this._posterImage.set_paintable(texture);
             }
         } catch (error) {

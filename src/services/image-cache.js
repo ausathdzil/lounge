@@ -21,7 +21,7 @@
 import GLib from 'gi://GLib';
 import Gio from 'gi://Gio';
 import Soup from 'gi://Soup?version=3.0';
-import GdkPixbuf from 'gi://GdkPixbuf';
+import Gdk from 'gi://Gdk';
 
 import { TMDB_POSTER_SIZE, TMDB_BACKDROP_SIZE } from '../utils/constants.js';
 
@@ -67,35 +67,97 @@ export class ImageCacheService {
             return null;
         }
 
-        // Check cache first
         const cachedPath = this._getCachedImagePath('poster', movieId, size);
         const cachedFile = Gio.File.new_for_path(cachedPath);
 
         if (cachedFile.query_exists(null)) {
             try {
-                const pixbuf = GdkPixbuf.Pixbuf.new_from_file(cachedPath);
-                return pixbuf;
+                const texture = this._loadTextureFromCacheFile(cachedPath);
+                if (texture) {
+                    return texture;
+                }
             } catch (error) {
                 console.error(`Failed to load cached poster for movie ${movieId}:`, error);
-                // Continue to download if cache read fails
             }
         }
 
-        // Download from TMDB
         const url = tmdbService.getPosterUrl(posterPath, size);
         if (!url) {
             return null;
         }
 
         try {
-            await this._downloadImage(url, cachedPath);
-            const pixbuf = GdkPixbuf.Pixbuf.new_from_file(cachedPath);
-            log(`Downloaded and cached poster for movie ${movieId}`);
-            return pixbuf;
+            const texture = await this._loadTextureFromUrl(url);
+            if (texture) {
+                await this._downloadAndSave(url, cachedPath);
+                log(`Downloaded and cached poster for movie ${movieId}`);
+                return texture;
+            }
         } catch (error) {
             console.error(`Failed to download poster for movie ${movieId}:`, error);
-            return null;
         }
+        return null;
+    }
+
+    async _downloadAndSave(url, localPath) {
+        return new Promise((resolve, reject) => {
+            const message = Soup.Message.new('GET', url);
+            this._session.send_and_read_async(message, GLib.PRIORITY_DEFAULT, null, (session, result) => {
+                try {
+                    const bytes = session.send_and_read_finish(result);
+                    const status = message.get_status();
+
+                    if (status !== 200) {
+                        reject(new Error(`HTTP ${status}: ${message.get_reason_phrase()}`));
+                        return;
+                    }
+
+                    const file = Gio.File.new_for_path(localPath);
+                    const stream = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
+                    stream.write_bytes(bytes, null);
+                    stream.close(null);
+                    resolve();
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+    }
+
+    _loadTextureFromCacheFile(filePath) {
+        try {
+            const file = Gio.File.new_for_path(filePath);
+            const [ok, contents] = file.load_contents(null);
+            if (ok && contents) {
+                const gbytes = new GLib.Bytes(contents);
+                return Gdk.Texture.new_from_bytes(gbytes);
+            }
+        } catch (error) {
+            console.error(`Failed to load cached texture ${filePath}:`, error);
+        }
+        return null;
+    }
+
+    _loadTextureFromUrl(url) {
+        return new Promise((resolve, reject) => {
+            const message = Soup.Message.new('GET', url);
+            this._session.send_and_read_async(message, GLib.PRIORITY_DEFAULT, null, (session, result) => {
+                try {
+                    const bytes = session.send_and_read_finish(result);
+                    const status = message.get_status();
+
+                    if (status !== 200) {
+                        reject(new Error(`HTTP ${status}: ${message.get_reason_phrase()}`));
+                        return;
+                    }
+
+                    const texture = Gdk.Texture.new_from_bytes(bytes);
+                    resolve(texture);
+                } catch (error) {
+                    reject(error);
+                }
+            });
+        });
     }
 
     async getBackdropPixbuf(movieId, backdropPath, tmdbService, size = TMDB_BACKDROP_SIZE) {
@@ -103,73 +165,41 @@ export class ImageCacheService {
             return null;
         }
 
-        // Check cache first
         const cachedPath = this._getCachedImagePath('backdrop', movieId, size);
         const cachedFile = Gio.File.new_for_path(cachedPath);
 
         if (cachedFile.query_exists(null)) {
             try {
-                const pixbuf = GdkPixbuf.Pixbuf.new_from_file(cachedPath);
-                return pixbuf;
+                const texture = this._loadTextureFromCacheFile(cachedPath);
+                if (texture) {
+                    return texture;
+                }
             } catch (error) {
                 console.error(`Failed to load cached backdrop for movie ${movieId}:`, error);
-                // Continue to download if cache read fails
             }
         }
 
-        // Download from TMDB
         const url = tmdbService.getBackdropUrl(backdropPath, size);
         if (!url) {
             return null;
         }
 
         try {
-            await this._downloadImage(url, cachedPath);
-            const pixbuf = GdkPixbuf.Pixbuf.new_from_file(cachedPath);
-            log(`Downloaded and cached backdrop for movie ${movieId}`);
-            return pixbuf;
+            const texture = await this._loadTextureFromUrl(url);
+            if (texture) {
+                await this._downloadAndSave(url, cachedPath);
+                log(`Downloaded and cached backdrop for movie ${movieId}`);
+                return texture;
+            }
         } catch (error) {
             console.error(`Failed to download backdrop for movie ${movieId}:`, error);
-            return null;
         }
-    }
-
-    async _downloadImage(url, localPath) {
-        return new Promise((resolve, reject) => {
-            const message = Soup.Message.new('GET', url);
-
-            this._session.send_and_read_async(
-                message,
-                GLib.PRIORITY_DEFAULT,
-                null,
-                (session, result) => {
-                    try {
-                        const bytes = session.send_and_read_finish(result);
-                        const status = message.get_status();
-
-                        if (status !== 200) {
-                            reject(new Error(`HTTP ${status}: ${message.get_reason_phrase()}`));
-                            return;
-                        }
-
-                        // Save to file
-                        const file = Gio.File.new_for_path(localPath);
-                        const outputStream = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
-                        outputStream.write_bytes(bytes, null);
-                        outputStream.close(null);
-
-                        resolve();
-                    } catch (error) {
-                        reject(error);
-                    }
-                }
-            );
-        });
+        return null;
     }
 
     _getCachedImagePath(type, movieId, size) {
         const baseDir = type === 'poster' ? this._postersDir : this._backdropsDir;
-        const filename = `${movieId}_${size}.jpg`;
+        const filename = `${movieId}_${size}.png`;
         return GLib.build_filenamev([baseDir, filename]);
     }
 

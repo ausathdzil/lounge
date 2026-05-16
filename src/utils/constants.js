@@ -6,8 +6,11 @@
  */
 
 // Card & poster dimensions (px)
-export const CARD_WIDTH = 150;
-export const POSTER_HEIGHT = 300;
+export const CARD_WIDTH = 110;
+export const POSTER_HEIGHT_CARD = 150;
+export const POSTER_HEIGHT_LOG = 170;
+export const POSTER_HEIGHT_DIALOG = 300;
+export const POSTER_ASPECT_RATIO = 2 / 3;
 export const POSTER_PLACEHOLDER_ICON_SIZE = 64;
 
 // TMDB image size variants

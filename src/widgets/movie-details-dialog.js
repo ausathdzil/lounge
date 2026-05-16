@@ -23,7 +23,7 @@ import Gtk from 'gi://Gtk';
 import Adw from 'gi://Adw';
 import { LogEntryDialog } from './log-entry-dialog.js';
 import { removeAllChildren, loadPosterIntoContainer } from '../utils/ui.js';
-import { POSTER_HEIGHT, POSTER_PLACEHOLDER_ICON_SIZE, MAX_RATING } from '../utils/constants.js';
+import { POSTER_HEIGHT_DIALOG, POSTER_PLACEHOLDER_ICON_SIZE, MAX_RATING, POSTER_ASPECT_RATIO } from '../utils/constants.js';
 
 export const MovieDetailsDialog = GObject.registerClass({
     GTypeName: 'MovieDetailsDialog',
@@ -35,7 +35,7 @@ export const MovieDetailsDialog = GObject.registerClass({
         super({
             title: movie.title,
             content_width: 500,
-            content_height: 600,
+            content_height: 680,
             can_close: true,
         });
 
@@ -67,7 +67,9 @@ export const MovieDetailsDialog = GObject.registerClass({
         const toolbarView = new Adw.ToolbarView();
 
         const headerBar = new Adw.HeaderBar({
-            show_title: false,
+            title_widget: new Adw.WindowTitle({
+                title: this._movie.title,
+            }),
         });
         toolbarView.add_top_bar(headerBar);
 
@@ -140,11 +142,10 @@ export const MovieDetailsDialog = GObject.registerClass({
 
         const mainBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
-            spacing: 24,
+            spacing: 12,
         });
 
         mainBox.append(this._buildPosterSection());
-        mainBox.append(this._buildTitleSection());
         mainBox.append(this._buildLogButton());
         mainBox.append(this._buildDetailsGroup());
         mainBox.append(this._buildOverviewGroup());
@@ -158,8 +159,8 @@ export const MovieDetailsDialog = GObject.registerClass({
         this._posterBox = new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
             halign: Gtk.Align.CENTER,
-            width_request: 200,
-            height_request: POSTER_HEIGHT,
+            width_request: Math.round(POSTER_HEIGHT_DIALOG * POSTER_ASPECT_RATIO),
+            height_request: POSTER_HEIGHT_DIALOG,
             overflow: Gtk.Overflow.HIDDEN,
             css_classes: ['card'],
         });
@@ -193,30 +194,10 @@ export const MovieDetailsDialog = GObject.registerClass({
     }
 
     _buildTitleSection() {
-        const titleBox = new Gtk.Box({
+        return new Gtk.Box({
             orientation: Gtk.Orientation.VERTICAL,
-            spacing: 4,
+            spacing: 0,
         });
-
-        const titleLabel = new Gtk.Label({
-            label: this._movie.title,
-            wrap: true,
-            xalign: 0.5,
-            justify: Gtk.Justification.CENTER,
-            css_classes: ['title-1'],
-        });
-        titleBox.append(titleLabel);
-
-        if (this._movie.year) {
-            const subtitleLabel = new Gtk.Label({
-                label: this._movie.year.toString(),
-                xalign: 0.5,
-                css_classes: ['dim-label', 'title-4'],
-            });
-            titleBox.append(subtitleLabel);
-        }
-
-        return titleBox;
     }
 
     _buildLogButton() {
@@ -254,6 +235,22 @@ export const MovieDetailsDialog = GObject.registerClass({
                 valign: Gtk.Align.CENTER,
             }));
             this._detailsGroup.add(ratingRow);
+        }
+
+        if (this._movie.year) {
+            const releaseRow = new Adw.ActionRow({
+                title: _('Release Date'),
+            });
+            releaseRow.add_prefix(new Gtk.Image({
+                icon_name: 'x-office-calendar-symbolic',
+                accessible_role: Gtk.AccessibleRole.PRESENTATION,
+            }));
+            releaseRow.add_suffix(new Gtk.Label({
+                label: this._movie.year.toString(),
+                css_classes: ['dim-label'],
+                valign: Gtk.Align.CENTER,
+            }));
+            this._detailsGroup.add(releaseRow);
         }
 
         // Runtime row (updated later if fetched)
@@ -359,6 +356,7 @@ export const MovieDetailsDialog = GObject.registerClass({
                 title: this._movie.title,
                 imageCache: this._imageCache,
                 tmdbService: this._tmdbService,
+                targetHeight: POSTER_HEIGHT_DIALOG,
             });
         } catch (error) {
             console.error(`Failed to load poster for movie ${this._movie.id}:`, error);

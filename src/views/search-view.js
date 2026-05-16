@@ -181,13 +181,14 @@ export const SearchView = GObject.registerClass({
         this._flowBox = new Gtk.FlowBox({
             selection_mode: Gtk.SelectionMode.NONE,
             homogeneous: true,
-            column_spacing: 12,
-            row_spacing: 12,
+            column_spacing: 8,
+            row_spacing: 8,
             margin_start: 12,
             margin_end: 12,
             margin_top: 12,
             margin_bottom: 18,
-            max_children_per_line: 6,
+            // Keep the grid to 2–3 columns for readability at default widths
+            max_children_per_line: 3,
             min_children_per_line: 2,
             activate_on_single_click: true,
         });
